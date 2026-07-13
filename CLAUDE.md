@@ -46,7 +46,7 @@ Monorepo com **pnpm workspaces** para gerenciar dependências e **Bun** como run
 MyStatistics/
 ├── apps/
 │   ├── web/         React 19 + Vite + Tailwind 4 + shadcn/ui  → :5173
-│   └── server/      API Bun (Bun.serve)                       → :3333
+│   └── server/      Bun + Elysia + Drizzle (Postgres)         → :3333
 ├── packages/
 │   └── shared/      Tipos e contratos de API (front ↔ back)
 ├── ACCEPTANCE.md    Critérios de aceite da aplicação
@@ -72,6 +72,9 @@ MyStatistics/
 | `pnpm typecheck` | `tsc --noEmit` em todos os pacotes |
 | `pnpm test` | Testes de todos os pacotes (`bun test`) |
 | `pnpm db:up` / `pnpm db:down` | Sobe/derruba o Postgres do [docker-compose.yml](docker-compose.yml) |
+| `pnpm db:generate` | Gera a migração SQL a partir do [schema.ts](apps/server/src/db/schema.ts) |
+| `pnpm db:migrate` | Aplica as migrações pendentes no banco |
+| `pnpm db:studio` | Abre o Drizzle Studio pra inspecionar o banco |
 
 - **Gerenciador de pacotes é o `pnpm`.** Nunca rode `bun install` nem `npm install` — quebra o lockfile. Para instalar em um app: `pnpm --filter @mystatistics/web add <pkg>`.
 - O **runtime** é o Bun (`bun --hot` no server, `bun test` nos testes). O Vite roda o front.
@@ -81,5 +84,12 @@ MyStatistics/
 - TypeScript **strict**, incluindo `noUncheckedIndexedAccess`. Nada de `any` — se o tipo não fecha, resolva o tipo.
 - Componentes de UI: use os de [apps/web/src/components/ui](apps/web/src/components/ui/) (shadcn). Novos via `pnpm dlx shadcn@latest add <componente>` rodado dentro de `apps/web`.
 - Estilo: Tailwind. Não escreva CSS solto se der pra fazer com utility class.
-- Persistência: **Postgres** via Docker Compose. O driver/ORM ainda **não** foi decidido — está em aberto no [ACCEPTANCE.md](ACCEPTANCE.md#7-decisões-em-aberto). Pergunte antes de escolher.
+
+## Backend
+
+- **Elysia** é o framework de rotas. Toda rota nova entra em [apps/server/src/index.ts](apps/server/src/index.ts) (ou num módulo Elysia próprio, montado com `.use()` quando o arquivo crescer). O prefixo `/api` já é global.
+- **Drizzle ORM** fala com o Postgres. Nada de SQL solto espalhado: as tabelas ficam em [apps/server/src/db/schema.ts](apps/server/src/db/schema.ts) e as queries usam o `db` de [apps/server/src/db/index.ts](apps/server/src/db/index.ts).
+- **Mudou o schema? Gere a migração.** `pnpm db:generate` e depois `pnpm db:migrate`. Migração é versionada e vai no commit — nunca altere a tabela na mão pelo Studio.
+- **Env**: o `.env` fica na **raiz**, não em `apps/server`. As variáveis são validadas na subida em [apps/server/src/env.ts](apps/server/src/env.ts) — se faltar uma, o server morre na hora com mensagem clara, e é isso que a gente quer.
+- Se o banco cair, `/api/health` responde `503` com `db: "down"`. Rotas novas não devem esconder falha de banco atrás de `200`.
 - Antes de dizer que terminou: rode `pnpm typecheck`. Se mexeu em algo que roda, suba com `pnpm dev` e confira de verdade — não afirme que funciona sem ter visto funcionar.

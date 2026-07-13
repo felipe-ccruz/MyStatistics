@@ -6,7 +6,7 @@ Monorepo pnpm com Bun como runtime.
 
 ```
 apps/web         React 19 + Vite + Tailwind 4 + shadcn/ui   → http://localhost:5173
-apps/server      API Bun (Bun.serve)                        → http://localhost:3333
+apps/server      Bun + Elysia + Drizzle (Postgres)          → http://localhost:3333
 packages/shared  Contratos de API compartilhados
 ```
 
@@ -30,6 +30,8 @@ Todos os comandos rodam da **raiz** — não é preciso entrar nas pastas.
 | `pnpm test` | Testes |
 | `pnpm build` | Build de produção |
 | `pnpm db:up` / `pnpm db:down` | Postgres via Docker |
+| `pnpm db:generate` / `pnpm db:migrate` | Gera e aplica migrações (Drizzle) |
+| `pnpm db:studio` | Drizzle Studio |
 
 O front chama `/api/...` e o Vite faz proxy para a API — o front nunca conhece a porta do server.
 

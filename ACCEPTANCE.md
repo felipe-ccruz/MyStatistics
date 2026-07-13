@@ -62,7 +62,8 @@ Uma feature só está pronta quando **todos** estes passam:
 - [x] **Dado** que estou na raiz do projeto, **quando** rodo `pnpm dev`, **então** front (`:5173`) e server (`:3333`) sobem juntos, com logs prefixados, sem eu entrar em nenhuma pasta.
 - [x] **Dado** que os dois estão no ar, **quando** o front chama `/api/...`, **então** o Vite faz proxy pro server e a resposta chega — sem o front conhecer a porta da API.
 - [x] **Dado** um tipo em `packages/shared`, **quando** front e server o importam, **então** os dois compilam contra o mesmo contrato.
-- [ ] **Dado** o `docker compose up -d`, **quando** o server sobe, **então** ele conecta no Postgres e `/api/health` responde `{ status: "ok", db: "ok" }`. *(pendente: o server ainda não fala com o banco)*
+- [x] **Dado** que o Postgres está **fora do ar**, **quando** chamo `/api/health`, **então** recebo `503` com `{ status: "degraded", db: "down" }` — a API não finge que está saudável.
+- [ ] **Dado** o `pnpm db:up`, **quando** o server sobe, **então** ele conecta no Postgres e `/api/health` responde `200` com `{ status: "ok", db: "ok" }`. *(implementado, mas ainda não validado: o Docker Desktop não estava rodando na máquina)*
 
 ### 5.2 Métricas — 🔲 a fazer
 
@@ -99,7 +100,9 @@ Uma feature só está pronta quando **todos** estes passam:
 | Gerenciador de pacotes | pnpm (workspaces) |
 | Runtime | Bun |
 | Front | React 19 + Vite + Tailwind 4 + shadcn/ui |
-| Server | `Bun.serve` |
+| Server | Bun + **Elysia** |
+| ORM | **Drizzle** (driver `postgres.js`) |
+| Migrações | `drizzle-kit` — versionadas em `apps/server/drizzle/` e commitadas |
 | Banco | Postgres em Docker Compose |
 | Autenticação | Nenhuma (single-user) |
 
@@ -107,8 +110,7 @@ Uma feature só está pronta quando **todos** estes passam:
 
 Resolver quando a primeira feature esbarrar nelas — **perguntar, não assumir**:
 
-- **Acesso ao banco**: `Bun.sql` puro (zero dep, SQL na mão) vs. ORM tipado (Drizzle). Impacta como as migrações são escritas.
-- **Migrações**: SQL versionado à mão vs. ferramenta de migration.
+- **Modelagem das tabelas**: `schema.ts` está vazio de propósito. As tabelas de métrica/registro/estudo nascem na primeira `feat:` que precisar delas.
 - **Gráficos**: qual biblioteca (Recharts, visx, ...) — decidir só quando a primeira tela de gráfico existir.
 - **Fuso horário / "o que é um dia"**: registro é datado em UTC ou no horário local? Vira bug sutil se ficar implícito.
 - **Roteamento no front**: o app é uma tela só ou precisa de router?
