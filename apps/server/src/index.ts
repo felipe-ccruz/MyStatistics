@@ -1,23 +1,19 @@
-import { serve } from "bun";
-import type { HelloResponse } from "@mystatistics/shared";
+import { Elysia } from "elysia";
+import type { HealthResponse, HelloResponse } from "@mystatistics/shared";
+import { env } from "@/env";
+import { pingDb } from "@/db";
 
-const port = Number(process.env.PORT ?? 3333);
+const app = new Elysia({ prefix: "/api" })
+  .get("/health", async ({ set }): Promise<HealthResponse> => {
+    const dbUp = await pingDb();
+    if (!dbUp) set.status = 503;
+    return { status: dbUp ? "ok" : "degraded", db: dbUp ? "ok" : "down" };
+  })
+  .get("/hello", (): HelloResponse => ({ message: "Hello, world!", method: "GET" }))
+  .put("/hello", (): HelloResponse => ({ message: "Hello, world!", method: "PUT" }))
+  .get("/hello/:name", ({ params }): HelloResponse => ({ message: `Hello, ${params.name}!`, method: "GET" }))
+  .listen(env.PORT);
 
-const server = serve({
-  port,
-  routes: {
-    "/api/health": () => Response.json({ status: "ok" }),
+console.log(`🚀 API rodando em http://localhost:${app.server?.port}`);
 
-    "/api/hello": {
-      GET: () => Response.json({ message: "Hello, world!", method: "GET" } satisfies HelloResponse),
-      PUT: () => Response.json({ message: "Hello, world!", method: "PUT" } satisfies HelloResponse),
-    },
-
-    "/api/hello/:name": req =>
-      Response.json({ message: `Hello, ${req.params.name}!`, method: "GET" } satisfies HelloResponse),
-  },
-
-  development: process.env.NODE_ENV !== "production",
-});
-
-console.log(`🚀 API rodando em ${server.url}`);
+export type App = typeof app;
