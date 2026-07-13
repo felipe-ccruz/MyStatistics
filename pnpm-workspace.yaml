@@ -1,0 +1,7 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# esbuild precisa rodar seu postinstall para baixar o binário nativo usado pelo Vite.
+onlyBuiltDependencies:
+  - esbuild
