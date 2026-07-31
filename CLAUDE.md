@@ -58,8 +58,35 @@ MyStatistics/
 ```
 
 - O front **não** chama `http://localhost:3333` na mão. Ele chama `/api/...` relativo, e o Vite faz proxy pro server (ver [apps/web/vite.config.ts](apps/web/vite.config.ts)).
-- Todo tipo que cruza a fronteira front↔back mora em [packages/shared](packages/shared/src/index.ts). O server valida com `satisfies`, o front importa o mesmo tipo.
+- Todo tipo que cruza a fronteira front↔back mora em [packages/shared](packages/shared/src/index.ts) — ver **Contrato front↔back** abaixo.
 - Alias `@/` aponta pro `src/` do próprio app (`@/components/ui/button`).
+
+## Contrato front↔back
+
+`packages/shared` é a **fonte única da verdade** do que cruza a fronteira. Front e back nunca combinam o formato de um dado por fora: um lado define aqui, o outro importa. Se o contrato muda, os dois quebram no `typecheck` na mesma hora — desalinhamento vira erro de compilação, não bug.
+
+- **Contrato com body de request (POST/PUT/PATCH): schema TypeBox, obrigatório.** Defina o schema em `shared` e derive o tipo dele:
+  ```ts
+  // packages/shared/src/metric.ts
+  import { t } from "elysia"; // TypeBox; casa 1:1 com a validação do Elysia
+  export const CreateMetric = t.Object({
+    name: t.String({ minLength: 1 }),
+    unit: t.String(),
+  });
+  export type CreateMetric = typeof CreateMetric.static;
+  ```
+  O server usa o **mesmo** schema na validação da rota (`{ body: CreateMetric }`) — validação de verdade em runtime, não só `satisfies`. O front tipa o form com `CreateMetric`. O que o front manda é exatamente o que o server aceita.
+- **Contrato só de response** (ex.: `HealthResponse`) pode ser `type` puro; use schema quando quiser que o server valide também o que devolve.
+- **Formato de erro é único.** Toda rota que falha responde o mesmo shape (ver ACCEPTANCE.md §6). O front trata um formato só.
+- **Nunca** redeclare à mão, em `apps/web` ou `apps/server`, o formato de algo que já é contrato. Faltou o tipo? Cria em `shared` primeiro, em commit próprio, **antes** de quem consome.
+
+## Agentes e fronteiras
+
+O front tem um agente próprio ([.claude/agents/frontend.md](.claude/agents/frontend.md)). A divisão de território evita que os dois se atropelem:
+
+- **`apps/web`** → dono é o agente de **front**.
+- **`apps/server`** → dono é o **back**.
+- **`packages/shared`** → **zona compartilhada**. Mudança aqui é mudança de contrato: commita o contrato primeiro, depois cada lado constrói contra ele — em paralelo, sem um esperar o outro.
 
 ## Comandos (sempre da raiz, nunca entre nas pastas)
 

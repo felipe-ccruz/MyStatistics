@@ -103,8 +103,10 @@ Uma feature só está pronta quando **todos** estes passam:
 | Server | Bun + **Elysia** |
 | ORM | **Drizzle** (driver `postgres.js`) |
 | Migrações | `drizzle-kit` — versionadas em `apps/server/drizzle/` e commitadas |
-| Banco | Postgres em Docker Compose |
+| Banco | Postgres em Docker Compose (host `:5433` → container `5432`, pra não colidir com Postgres local) |
 | Autenticação | Nenhuma (single-user) |
+| Contrato front↔back | Schemas **TypeBox** em `packages/shared`; Elysia valida request/response com o mesmo schema; o front deriva o tipo (`typeof Schema.static`). Contrato com body de request **exige** schema. |
+| Formato de erro | Toda rota que falha responde `{ error: { message: string; code: string } }` com o HTTP status adequado — o front trata um formato só. |
 
 ## 7. Decisões em aberto
 
