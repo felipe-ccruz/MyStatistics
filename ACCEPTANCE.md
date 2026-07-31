@@ -63,7 +63,7 @@ Uma feature só está pronta quando **todos** estes passam:
 - [x] **Dado** que os dois estão no ar, **quando** o front chama `/api/...`, **então** o Vite faz proxy pro server e a resposta chega — sem o front conhecer a porta da API.
 - [x] **Dado** um tipo em `packages/shared`, **quando** front e server o importam, **então** os dois compilam contra o mesmo contrato.
 - [x] **Dado** que o Postgres está **fora do ar**, **quando** chamo `/api/health`, **então** recebo `503` com `{ status: "degraded", db: "down" }` — a API não finge que está saudável.
-- [ ] **Dado** o `pnpm db:up`, **quando** o server sobe, **então** ele conecta no Postgres e `/api/health` responde `200` com `{ status: "ok", db: "ok" }`. *(implementado, mas ainda não validado: o Docker Desktop não estava rodando na máquina)*
+- [x] **Dado** o `pnpm db:up`, **quando** o server sobe, **então** ele conecta no Postgres e `/api/health` responde `200` com `{ status: "ok", db: "ok" }` — validado direto (`:3333`) e pelo proxy do Vite (`:5173`).
 
 ### 5.2 Métricas — 🔲 a fazer
 
