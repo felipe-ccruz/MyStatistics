@@ -1,9 +1,22 @@
 import { Elysia } from "elysia";
+import { openapi } from "@elysiajs/openapi";
 import type { HealthResponse, HelloResponse } from "@mystatistics/shared";
 import { env } from "@/env";
 import { pingDb } from "@/db";
 
 const app = new Elysia({ prefix: "/api" })
+  .use(
+    openapi({
+      path: "/docs",
+      documentation: {
+        info: {
+          title: "MyStatistics API",
+          version: "0.1.0",
+          description: "API do MyStatistics — métricas, registros e estatísticas pessoais.",
+        },
+      },
+    }),
+  )
   .get("/health", async ({ set }): Promise<HealthResponse> => {
     const dbUp = await pingDb();
     if (!dbUp) set.status = 503;
@@ -15,5 +28,6 @@ const app = new Elysia({ prefix: "/api" })
   .listen(env.PORT);
 
 console.log(`🚀 API rodando em http://localhost:${app.server?.port}`);
+console.log(`📚 Docs em http://localhost:${app.server?.port}/api/docs`);
 
 export type App = typeof app;
