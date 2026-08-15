@@ -31,7 +31,7 @@ export const errorHandler = new Elysia({ name: "error-handler" }).onError(
     switch (code) {
       case "VALIDATION":
         set.status = 422;
-        return body(error.message, "VALIDATION");
+        return body("Dados inválidos. Verifique os campos enviados.", "VALIDATION");
       case "NOT_FOUND":
         set.status = 404;
         return body("Recurso não encontrado.", "NOT_FOUND");
