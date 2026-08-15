@@ -4,6 +4,7 @@ import type { HealthResponse, HelloResponse } from "@mystatistics/shared";
 import { env } from "@/env";
 import { pingDb } from "@/db";
 import { errorHandler } from "@/errors";
+import { activities } from "@/routes/activities";
 
 const app = new Elysia({ prefix: "/api" })
   .use(errorHandler)
@@ -19,6 +20,7 @@ const app = new Elysia({ prefix: "/api" })
       },
     }),
   )
+  .use(activities)
   .get("/health", async ({ set }): Promise<HealthResponse> => {
     const dbUp = await pingDb();
     if (!dbUp) set.status = 503;
