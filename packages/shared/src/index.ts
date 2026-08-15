@@ -12,3 +12,8 @@ export type HelloResponse = {
   message: string;
   method: string;
 };
+
+export { ACTIVITY_CATEGORIES } from "./activity";
+export type { Activity, ActivityCategory } from "./activity";
+export { CreateActivity } from "./activity-schema";
+export type { ApiError } from "./error";
