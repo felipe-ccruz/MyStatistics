@@ -3,8 +3,10 @@ import { openapi } from "@elysiajs/openapi";
 import type { HealthResponse, HelloResponse } from "@mystatistics/shared";
 import { env } from "@/env";
 import { pingDb } from "@/db";
+import { errorHandler } from "@/errors";
 
 const app = new Elysia({ prefix: "/api" })
+  .use(errorHandler)
   .use(
     openapi({
       path: "/docs",
