@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { desc, eq } from "drizzle-orm";
-import { CreateActivity, type Activity } from "@mystatistics/shared";
+import { CreateActivity, UpdateActivity, type Activity } from "@mystatistics/shared";
 import { db } from "@/db";
 import { activities as activitiesTable } from "@/db/schema";
 import { HttpError } from "@/errors";
@@ -52,20 +52,35 @@ export const activities = new Elysia({ prefix: "/activities" })
   .get("/:id", async ({ params }): Promise<Activity> => toActivity(await findOr404(params.id)), {
     params: idParams,
   })
-  .put(
+  .patch(
     "/:id",
     async ({ params, body }): Promise<Activity> => {
       await findOr404(params.id);
-      const durationMinutes = toDurationMinutes(body.hours, body.minutes);
+
+      const changes: Partial<Pick<ActivityRow, "category" | "durationMinutes" | "date">> = {};
+      if (body.category !== undefined) changes.category = body.category;
+      if (body.date !== undefined) changes.date = body.date;
+
+      // Duração se recalcula a partir de horas + minutos: ou vêm os dois, ou nenhum.
+      if (body.hours !== undefined && body.minutes !== undefined) {
+        changes.durationMinutes = toDurationMinutes(body.hours, body.minutes);
+      } else if (body.hours !== undefined || body.minutes !== undefined) {
+        throw new HttpError(422, "Informe horas e minutos juntos para alterar a duração.", "INVALID_DURATION");
+      }
+
+      if (Object.keys(changes).length === 0) {
+        throw new HttpError(422, "Nada para atualizar.", "EMPTY_UPDATE");
+      }
+
       const [row] = await db
         .update(activitiesTable)
-        .set({ category: body.category, durationMinutes, date: body.date ?? todayISO() })
+        .set(changes)
         .where(eq(activitiesTable.id, params.id))
         .returning();
       if (!row) throw new HttpError(500, "Falha ao atualizar a atividade.", "INTERNAL");
       return toActivity(row);
     },
-    { body: CreateActivity, params: idParams },
+    { body: UpdateActivity, params: idParams },
   )
   .delete(
     "/:id",
