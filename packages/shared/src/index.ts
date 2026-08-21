@@ -15,5 +15,5 @@ export type HelloResponse = {
 
 export { ACTIVITY_CATEGORIES } from "./activity";
 export type { Activity, ActivityCategory } from "./activity";
-export { CreateActivity } from "./activity-schema";
+export { CreateActivity, UpdateActivity } from "./activity-schema";
 export type { ApiError } from "./error";

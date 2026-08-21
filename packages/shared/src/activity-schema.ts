@@ -17,3 +17,17 @@ export const CreateActivity = t.Object({
 });
 
 export type CreateActivity = typeof CreateActivity.static;
+
+/**
+ * Body de atualização parcial (PATCH). Todos os campos são opcionais — o cliente
+ * manda só o que quer mudar. Regra do server: `hours` e `minutes` vêm juntos (ou
+ * nenhum), porque a duração é recalculada a partir dos dois; body vazio é rejeitado.
+ */
+export const UpdateActivity = t.Object({
+  category: t.Optional(t.Union(ACTIVITY_CATEGORIES.map((c) => t.Literal(c)))),
+  hours: t.Optional(t.Integer({ minimum: 0 })),
+  minutes: t.Optional(t.Integer({ minimum: 0, maximum: 59 })),
+  date: t.Optional(t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+});
+
+export type UpdateActivity = typeof UpdateActivity.static;
