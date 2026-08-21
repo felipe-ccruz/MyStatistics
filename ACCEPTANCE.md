@@ -100,7 +100,8 @@ Uma feature só está pronta quando **todos** estes passam:
 - [x] **Dado** `hours`/`minutes` que somam zero, **quando** tento criar, **então** recebo `422` com `code: "INVALID_DURATION"` e nada é gravado.
 - [x] **Dado** uma categoria fora de `estudo|alimentacao|academia`, **quando** tento criar, **então** recebo `422 VALIDATION` — o TypeBox barra na borda e o pgEnum garante no banco.
 - [x] **Dado** atividades cadastradas, **quando** faço `GET /api/activities`, **então** recebo a lista ordenada por `date` (desc).
-- [x] **Dado** um id, **quando** faço `GET/PUT/DELETE /api/activities/:id`, **então** busco, edito (reusa o schema do create) ou removo (`204`); id inexistente responde `404 NOT_FOUND` no shape único.
+- [x] **Dado** um id, **quando** faço `GET/PATCH/DELETE /api/activities/:id`, **então** busco, edito ou removo (`204`); id inexistente responde `404 NOT_FOUND` no shape único.
+- [x] **Dado** um `PATCH` parcial, **quando** mando só os campos que quero mudar, **então** só eles mudam; `hours`/`minutes` vêm juntos (ou nenhum) para recalcular a duração, e body vazio responde `422`.
 - [ ] **(front)** Tela de cadastro de atividade com os três estados (vazio, carregando, erro) — pendente, agente de front.
 
 ---
