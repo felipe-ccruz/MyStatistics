@@ -7,7 +7,7 @@
  */
 
 /** Fonte única da verdade das categorias. Alimenta o pgEnum (banco) e o TypeBox (borda). */
-export const ACTIVITY_CATEGORIES = ["estudo", "alimentacao", "academia"] as const;
+export const ACTIVITY_CATEGORIES = ["study", "exercise"] as const;
 
 export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 
