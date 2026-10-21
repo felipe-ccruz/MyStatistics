@@ -120,3 +120,36 @@ O front tem um agente próprio ([.claude/agents/frontend.md](.claude/agents/fron
 - **Env**: o `.env` fica na **raiz**, não em `apps/server`. As variáveis são validadas na subida em [apps/server/src/env.ts](apps/server/src/env.ts) — se faltar uma, o server morre na hora com mensagem clara, e é isso que a gente quer.
 - Se o banco cair, `/api/health` responde `503` com `db: "down"`. Rotas novas não devem esconder falha de banco atrás de `200`.
 - Antes de dizer que terminou: rode `pnpm typecheck`. Se mexeu em algo que roda, suba com `pnpm dev` e confira de verdade — não afirme que funciona sem ter visto funcionar.
+
+---
+
+## Time de agentes
+
+Os agentes ficam em [.claude/agents/](.claude/agents/), versionados. Cada um começa **sem contexto**: só sabe o que está no arquivo dele, neste CLAUDE.md, no [ACCEPTANCE.md](ACCEPTANCE.md), no [docs/contract.md](docs/contract.md) e no pedido. Por isso o pedido pra um subagent tem que ser autossuficiente.
+
+| Agente | Papel | Escreve em | Isolamento |
+| --- | --- | --- | --- |
+| **manager** (sessão principal) | Conversa comigo, define o contrato, dispara e consolida | `packages/shared`, `docs/contract.md`, `ACCEPTANCE.md`; merge | — |
+| [backend](.claude/agents/backend.md) | Rotas, regras de negócio, banco, migrações | `apps/server` | worktree |
+| [frontend](.claude/agents/frontend.md) | Telas, componentes, chamada à API | `apps/web` | worktree |
+| [reviewer](.claude/agents/reviewer.md) | Revisa os diffs e valida com testes | só `*.test.ts` em `apps/server`, sem commit | — |
+| [explainer](.claude/agents/explainer.md) | Me explica, em linguagem simples, o que foi feito | nada (só lê) | — |
+
+**A sessão principal é o manager.** Subagents não conseguem disparar outros subagents, então coordenar é trabalho só dela.
+
+### Fluxo padrão
+
+1. **Manager define/atualiza o contrato.** Em `feat:`, antes vem a Regra 1 (investiga, pergunta, espera minha confirmação). Depois escreve o contrato em `packages/shared` + [docs/contract.md](docs/contract.md), roda `pnpm typecheck` e **commita o contrato** com o meu ok (Regra 2). Worktree nasce de commit: contrato não commitado não chega nos agentes.
+2. **Backend e frontend em paralelo**, cada um no próprio worktree e branch. Cada um commita na própria branch e devolve o relatório, com branch, caminho do worktree e último commit.
+3. **Reviewer revisa e testa** as duas branches. Recebe do manager as branches, os caminhos dos worktrees e os relatórios. Devolve os achados por severidade e um veredito.
+4. **Manager consolida.** Resolve as pendências (pedido de contrato volta pro passo 1), me mostra o resultado, faz o merge **quando eu pedir**, atualiza o ACCEPTANCE.md com os critérios propostos e confere o sistema integrado de verdade: `pnpm typecheck`, testes do server, `pnpm dev` e o fluxo no navegador (os subagents não têm navegador).
+
+O **explainer** fica fora do fluxo: só é chamado quando eu pedir explicitamente ("explica", "chama o explicador").
+
+### Regras do fluxo
+
+- **Contrato e critérios têm dono único.** No fluxo de agentes, só o manager escreve em `packages/shared`, `docs/contract.md` e `ACCEPTANCE.md`. Isso detalha a "zona compartilhada" de **Agentes e fronteiras**: back e front trabalham em branches paralelas, e se os dois mexessem no contrato ele divergiria e o merge conflitaria. Precisou mudar? Vira pendência no relatório.
+- **Commits dos agentes.** Backend e frontend estão autorizados a commitar **na própria branch do worktree**. A Regra 2 vale inteira (commits pequenos, `<tipo>: <imperativo>`, sem co-autoria). Nunca em `main`, nunca merge, nunca `push`. O reviewer não commita: deixa os testes no worktree e lista no relatório.
+- **Worktrees** ficam em `.claude/worktrees/`, ignorado no git. O [.worktreeinclude](.worktreeinclude) copia o `.env` local pra eles. O `node_modules` não vem junto: o primeiro passo do agente no worktree é `pnpm install --frozen-lockfile`.
+- **Recursos compartilhados.** Todos os worktrees usam o **mesmo** Postgres e as **mesmas** portas (`:3333`, `:5173`). Agente não mata processo que não subiu (nada de `taskkill //IM bun.exe`) e informa as migrações que aplicou no banco local.
+- **Testes só no server.** Só o `apps/server` tem testes (unitários de lógica pura e, depois, de integração); `apps/web` e `packages/shared` não têm. Rode `pnpm --filter @mystatistics/server test` — não rode `pnpm test` da raiz.
