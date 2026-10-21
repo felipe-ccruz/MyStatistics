@@ -1,0 +1,6 @@
+# Arquivos ignorados pelo git que os worktrees dos agentes precisam pra rodar.
+# Só o estritamente necessário — nunca segredo de produção.
+
+# .env local de desenvolvimento: DATABASE_URL do Postgres do docker-compose e PORT.
+# Sem ele o server não sobe (apps/server/src/env.ts) e o drizzle-kit não acha o banco.
+.env
