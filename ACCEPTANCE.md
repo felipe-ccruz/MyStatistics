@@ -3,7 +3,7 @@
 > Documento vivo. É a fonte da verdade sobre **o que a aplicação precisa fazer** e **quando uma feature está pronta**.
 > Toda feature (`feat:`) termina com este arquivo atualizado. Se um critério aqui não passa, a feature não está pronta.
 
-**Última atualização:** 2026-10-20
+**Última atualização:** 2026-10-21
 
 ---
 
@@ -42,7 +42,7 @@ Vocabulário fixo. Código, rotas e UI usam **estes** nomes — sem sinônimos s
 | **Métrica** (`metric`) | A *definição* do que é medido: nome, unidade, tipo de valor. Ex.: "Peso (kg)". |
 | **Registro** (`entry`) | Um *lançamento* de uma métrica: valor + data. Ex.: "Peso = 78.4 em 2026-07-12". |
 | **Sessão de estudo** (`study session`) | Um bloco de estudo: matéria/tópico, duração, data. |
-| **Atividade** (`activity`) | Um lançamento de tempo gasto numa categoria (estudo, alimentação, academia), num dia. Ex.: "Estudo = 90 min em 2026-08-21". |
+| **Atividade** (`activity`) | Um lançamento de tempo gasto numa categoria (`study` ou `exercise`), num dia. `exercise` cobre qualquer exercício físico: academia, corrida, bike etc. Ex.: "Study = 90 min em 2026-08-21". |
 | **Período** | Recorte de tempo usado nas análises (7d, 30d, mês, ano, customizado). |
 | **Resumo** (`summary`) | Estatísticas calculadas sobre um conjunto de registros num período. |
 
@@ -128,7 +128,7 @@ Uma feature só está pronta quando **todos** estes passam:
 - [x] **Dado** um body com `category`, `hours` e `minutes`, **quando** faço `POST /api/activities`, **então** a atividade é criada (`201`), a duração é gravada em minutos (`hours*60+minutes`) e a `date` assume o dia de hoje se eu não mandar uma.
 - [x] **Dado** que quero lançar uma atividade de ontem, **quando** mando `date` no body (`YYYY-MM-DD`), **então** ela é gravada naquela data.
 - [x] **Dado** `hours`/`minutes` que somam zero, **quando** tento criar, **então** recebo `422` com `code: "INVALID_DURATION"` e nada é gravado.
-- [x] **Dado** uma categoria fora de `estudo|alimentacao|academia`, **quando** tento criar, **então** recebo `422 VALIDATION` — o TypeBox barra na borda e o pgEnum garante no banco.
+- [x] **Dado** uma categoria fora de `study|exercise` (inclusive os valores antigos `estudo`, `alimentacao`, `academia`), **quando** tento criar, **então** recebo `422 VALIDATION` — o TypeBox barra na borda e o pgEnum garante no banco.
 - [x] **Dado** atividades cadastradas, **quando** faço `GET /api/activities`, **então** recebo a lista ordenada por `date` (desc).
 - [x] **Dado** um id, **quando** faço `GET/PATCH/DELETE /api/activities/:id`, **então** busco, edito ou removo (`204`); id inexistente responde `404 NOT_FOUND` no shape único.
 - [x] **Dado** um `PATCH` parcial, **quando** mando só os campos que quero mudar, **então** só eles mudam; `hours`/`minutes` vêm juntos (ou nenhum) para recalcular a duração, e body vazio responde `422`.
@@ -145,12 +145,13 @@ Uma feature só está pronta quando **todos** estes passam:
 | Gerenciador de pacotes | pnpm (workspaces) |
 | Runtime | Bun |
 | Front | React 19 + Vite + Tailwind 4 + shadcn/ui |
+| Idioma da UI | **Inglês** (ex.: rótulos "Study" / "Exercise"). |
 | Server | Bun + **Elysia** |
 | ORM | **Drizzle** (driver `postgres.js`) |
 | Migrações | `drizzle-kit` — versionadas em `apps/server/drizzle/` e commitadas |
 | Banco | Postgres em Docker Compose (host `:5433` → container `5432`, pra não colidir com Postgres local) |
 | Usuários | **Multiusuário.** Todo dado tem dono (`user_id`). Perfil privado por padrão, com portfólio público opcional e visibilidade escolhida item a item. |
-| Modelo de Atividade | `duration_minutes` (inteiro; horas+minutos são só a entrada). `date` como **dia de calendário** (sem hora → sem fuso). Categoria como **pgEnum + TypeBox** derivados de uma lista única (`ACTIVITY_CATEGORIES`) em `shared`. |
+| Modelo de Atividade | `duration_minutes` (inteiro; horas+minutos são só a entrada). `date` como **dia de calendário** (sem hora → sem fuso). Categoria como **pgEnum + TypeBox** derivados de uma lista única (`ACTIVITY_CATEGORIES`) em `shared`: `study` e `exercise`, valores em inglês (`exercise` cobre qualquer exercício físico). |
 | Contrato front↔back | Schemas **TypeBox** em `packages/shared`; Elysia valida request/response com o mesmo schema; o front deriva o tipo (`typeof Schema.static`). Contrato com body de request **exige** schema. |
 | Formato de erro | Toda rota que falha responde `{ error: { message: string; code: string } }` com o HTTP status adequado — o front trata um formato só. |
 
