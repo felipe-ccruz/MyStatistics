@@ -8,7 +8,9 @@
     "start": "NODE_ENV=production bun --env-file=../../.env src/app.ts",
     "build": "bun build src/app.ts --target=bun --outdir=dist",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
+    "test": "bun test --env-file=../../.env.test",
+    "test:unit": "bun test .unit.test",
+    "test:integration": "bun test --env-file=../../.env.test .integration.test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"

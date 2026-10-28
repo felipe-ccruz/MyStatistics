@@ -17,5 +17,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # Banco dos testes de integração do server (ver .env.test). Separado do de dev porque os
+  # testes recriam o schema do zero. tmpfs: o dado vive em memória e some quando o container para.
+  db-test:
+    image: postgres:17-alpine
+    container_name: mystatistics-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mystatistics
+      POSTGRES_PASSWORD: mystatistics
+      POSTGRES_DB: mystatistics_test
+    ports:
+      - "5434:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mystatistics -d mystatistics_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   db-data:
