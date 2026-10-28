@@ -11,7 +11,7 @@ Você começa **sem nenhum contexto** da conversa. O manager (a sessão principa
 
 ## A regra que não se quebra: você não conserta, você aponta
 
-- Você **só cria ou edita arquivos de teste do server**: `*.test.ts` em `apps/server`, ao lado do código testado (padrão do repo: [activity-logic.test.ts](../../apps/server/src/routes/activity-logic.test.ts)).
+- Você **só cria ou edita arquivos de teste do server**, ao lado do código testado: `*.unit.test.ts` (padrão: [activity-logic.unit.test.ts](../../apps/server/src/activities/domain/activity-logic.unit.test.ts)) e `*.usecase.integration.test.ts` (padrão: os de [activities/application](../../apps/server/src/activities/application/)).
 - **Nunca** altera código de produção, configuração, `package.json`, migrações, `packages/shared` ou documentação. Achou um bug? Ele vai pro relatório com a correção sugerida. Quem corrige é o agente dono.
 - **Não commita.** Os testes que você escrever ficam no worktree revisado, sem commit, listados no relatório. O manager decide o que fazer com eles.
 
@@ -28,8 +28,14 @@ Você roda no checkout principal, que pode ter trabalho meu sem commit.
 ## O que se sabe da infra de testes (verificado em 2026-10-21)
 
 - Runner: **`bun test`** (`import { describe, expect, it } from "bun:test"`). Ele acha arquivos `*.test.*`, `*.spec.*`, `*_test_*`, `*_spec_*`.
-- **Testes vivem só no `apps/server`** (hoje, 1 arquivo). O `apps/web` e o `packages/shared` não têm e não vão ter testes: revise-os por leitura, `typecheck` e `build`. Rode sempre `pnpm --filter @mystatistics/server test` — **nunca** `pnpm test` da raiz.
-- O server vai ter testes de **integração** (rota + banco), mas a infraestrutura ainda não existe. O `bun test` do server **não** recebe `--env-file` (o `dev` recebe), então teste que importa `@/env` ou `@/db` tende a quebrar por falta de `DATABASE_URL`. Por enquanto, o padrão do repo é isolar lógica pura (sem `db`, sem `env`) e testar só ela. Precisa de teste com banco? **Sugira** o mínimo viável no relatório, não monte a infraestrutura.
+- **Testes vivem só no `apps/server`.** O `apps/web` e o `packages/shared` não têm e não vão ter testes: revise-os por leitura, `typecheck` e `build`. **Nunca** rode `pnpm test` da raiz.
+- Dois tipos, cada um ao lado do código:
+  - `*.unit.test.ts` — regra pura, sem banco. `pnpm --filter @mystatistics/server test:unit`.
+  - `*.usecase.integration.test.ts` — um por use case, contra o Postgres de teste (`db-test` do docker-compose, `:5434`, via `.env.test`). `pnpm --filter @mystatistics/server test:integration`.
+  - Os dois juntos: `pnpm --filter @mystatistics/server test`. A integração precisa do `pnpm db:up`.
+- O `IntegrationTestHelper` ([integration-test-helper.ts](../../apps/server/src/shared/utils/test-helpers/integration-test-helper.ts)) recria o schema a partir das migrações uma vez por execução e se recusa a rodar fora de um banco `*_test`. Cada arquivo usa `beforeAll(setupTestDatabase)` + `afterEach(truncate(tabela))`.
+- O `db-test` é compartilhado: não rode a integração ao mesmo tempo que outro agente.
+- Controller não tem teste automatizado. Revise por leitura e, se der, exercite a rota com `curl`.
 - Sem infra pra algo? Diga isso e sugira o **mínimo** que resolve. Não invente uma suíte grande.
 
 ## Checklist
@@ -39,10 +45,12 @@ Você roda no checkout principal, que pode ter trabalho meu sem commit.
 - Rota com body valida com o **mesmo** schema TypeBox (`{ body: Schema }`), não com `satisfies`.
 - Rota implementada = tabela de **Rotas** do [docs/contract.md](../../docs/contract.md) (método, caminho, status, códigos de erro). Front chama só rota que está lá.
 - Diff de agente em `packages/shared`, `docs/contract.md` ou `ACCEPTANCE.md` é violação: só o manager escreve ali.
-- Falha responde no shape único `ApiError` (via `HttpError`/`errorHandler`), com o status certo.
+- Falha responde no shape único `ApiError` (via as classes de `shared/infra/errors` + `errorHandler`), com o status certo.
 
 **Back (`apps/server`)**
-- Drizzle, sem SQL solto. Schema mudou → migração gerada em `apps/server/drizzle/` e commitada.
+- Estrutura igual à do módulo `activities` (ver seção **Backend** do CLAUDE.md): controller só faz HTTP, regra de negócio no use case, query só no repository; controller criado com `createController` e registrado em `app.routes.ts`; use case que lê e escreve usa transação e passa o `tx` adiante.
+- Use case novo tem o seu `*.usecase.integration.test.ts`, cobrindo sucesso e cada erro que lança.
+- Drizzle, sem SQL solto. Tabela em `<modulo>/domain/<nome>.schema.ts`. Schema mudou → migração gerada em `apps/server/drizzle/` e commitada.
 - Falha de banco não vira `200`.
 - Casos de borda: id inexistente (`404`), id não numérico, body vazio, campos no limite (`0`, `59`, negativos), tipos errados, data inválida.
 - Isolamento entre usuários (ACCEPTANCE §4) quando existir autenticação: toda rota filtra pelo usuário logado; recurso de outro usuário responde `404`, não `403`.

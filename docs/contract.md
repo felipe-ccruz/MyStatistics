@@ -36,7 +36,7 @@ Os detalhes entram aqui no `feat:` de contas.
 
 ## Erros
 
-Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/src/error.ts). O server produz via `HttpError` + `errorHandler`, em [apps/server/src/errors.ts](../apps/server/src/errors.ts). `message` é texto em pt-BR pronto pra exibir; `code` identifica a falha.
+Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/src/error.ts). O server produz lançando as classes de [apps/server/src/shared/infra/errors](../apps/server/src/shared/infra/errors/) (todas estendem `HttpError`), formatadas pelo `errorHandler` global. `message` é texto em pt-BR pronto pra exibir; `code` identifica a falha.
 
 | `code` | Status | Quando |
 | --- | --- | --- |
@@ -65,7 +65,7 @@ Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/s
 | PUT | `/api/hello` | — | `HelloResponse` | `200` |
 | GET | `/api/hello/:name` | — | `HelloResponse` | `200` |
 
-### Atividades — [apps/server/src/routes/activities.ts](../apps/server/src/routes/activities.ts)
+### Atividades — [apps/server/src/activities/infra/activity.controller.ts](../apps/server/src/activities/infra/activity.controller.ts)
 
 Tipos em [activity.ts](../packages/shared/src/activity.ts) e schemas em [activity-schema.ts](../packages/shared/src/activity-schema.ts). As regras de negócio (duração = `hours*60 + minutes` > 0, `date` omitida = hoje, `hours`/`minutes` juntos no PATCH) estão nos comentários do schema e na ACCEPTANCE §5.6.
 

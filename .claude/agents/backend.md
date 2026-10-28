@@ -36,21 +36,32 @@ O Postgres e as portas (`:3333`, `:5173`) são **compartilhados** com a sessão 
 - **Rota com body de request (POST/PUT/PATCH): schema TypeBox em `shared`, obrigatório.** Valide com o **mesmo** schema (`{ body: CreateMetric }`) — validação de verdade em runtime, não `satisfies`. Se o body não bate, o Elysia rejeita antes do handler.
 - O tipo de response também vive em `shared`. O front deriva dele — se a rota precisar devolver um shape diferente, isso é pedido de contrato (acima), nunca mudança silenciosa.
 - A rota implementada bate com a tabela de **Rotas** do [docs/contract.md](../../docs/contract.md): método, caminho, status e códigos de erro.
-- **Formato de erro único** (ver ACCEPTANCE.md §6): toda falha responde `{ error: { message, code } }` com o HTTP status certo, via `HttpError` de [apps/server/src/errors.ts](../../apps/server/src/errors.ts). Não invente shape de erro por rota.
+- **Formato de erro único** (ver ACCEPTANCE.md §6): toda falha responde `{ error: { message, code } }` com o HTTP status certo, lançando as classes de [shared/infra/errors](../../apps/server/src/shared/infra/errors/) (`NotFoundError`, `UnprocessableEntityError`…). Não invente shape de erro por rota.
+
+## Estrutura: siga o módulo `activities`
+
+O server é organizado em módulos por feature, e o módulo [activities](../../apps/server/src/activities/) é o modelo. Feature nova = pasta nova `apps/server/src/<modulo>/` com a mesma forma, arquivo por arquivo. A árvore completa e o papel de cada camada estão na seção **Backend** do CLAUDE.md. O essencial:
+
+- `domain/` — tabela Drizzle (`<nome>.schema.ts`), schemas TypeBox só do server, como params de rota (`<nome>.types.ts`), mapper linha → DTO (`<nome>.mapper.ts`) e regras puras.
+- `application/` — um `<verbo>-<nome>.usecase.ts` por operação. Regra de negócio mora aqui.
+- `infra/` — `<nome>.controller.ts` (só HTTP: valida, chama o use case, define status) e `<nome>.repository.ts` (só query, métodos estáticos com `tx?` opcional).
+- Controller novo nasce de `createController({ prefix, tags })` e é registrado em [app.routes.ts](../../apps/server/src/app.routes.ts). Cada rota leva `detail.summary`.
+- Use case que lê e depois escreve abre `db.transaction` e passa o `tx` para todo método do repository chamado dentro dela.
 
 ## Regras de API e banco
 
-- **Elysia** é o framework. Rota nova entra em [apps/server/src/index.ts](../../apps/server/src/index.ts) — ou num módulo Elysia próprio montado com `.use()` quando o arquivo crescer. Prefixo `/api` já é global.
-- **Drizzle** fala com o Postgres. Nada de SQL solto espalhado: tabelas em [apps/server/src/db/schema.ts](../../apps/server/src/db/schema.ts), queries usando o `db` de [apps/server/src/db/index.ts](../../apps/server/src/db/index.ts).
+- **Elysia** é o framework. Prefixo `/api` já é global (vem do [app.ts](../../apps/server/src/app.ts)).
+- **Drizzle** fala com o Postgres. Nada de SQL solto espalhado: a tabela fica em `<modulo>/domain/<nome>.schema.ts`, as queries só no repository, usando o `db` de [postgres.ts](../../apps/server/src/shared/infra/databases/postgres.ts).
 - **Mudou o schema? Gere a migração.** `pnpm db:generate` e depois `pnpm db:migrate`. Migração é versionada e vai no commit — **nunca** altere a tabela na mão pelo Studio.
-- **Env** fica no `.env` da **raiz**, validado na subida em [apps/server/src/env.ts](../../apps/server/src/env.ts). Faltou variável, o server morre com mensagem clara — é o comportamento desejado.
+- **Env** fica no `.env` da **raiz**, validado na subida em [env.ts](../../apps/server/src/shared/infra/env/env.ts). Faltou variável, o server morre com mensagem clara — é o comportamento desejado.
 - **Não esconda falha de banco atrás de `200`.** Se o Postgres cai, `/api/health` responde `503` com `db: "down"`. Rotas novas seguem a mesma honestidade.
-- **Lógica pura fica separada do banco**, como em [activity-logic.ts](../../apps/server/src/routes/activity-logic.ts): sem `db`, sem `env`, testável com `bun test` sem subir Postgres. Lógica nova ganha um `*.test.ts` ao lado, no padrão de [activity-logic.test.ts](../../apps/server/src/routes/activity-logic.test.ts).
+- **Lógica pura fica separada do banco**, como em [activity-logic.ts](../../apps/server/src/activities/domain/activity-logic.ts): sem `db`, sem `env`, com `*.unit.test.ts` ao lado ([activity-logic.unit.test.ts](../../apps/server/src/activities/domain/activity-logic.unit.test.ts)).
+- **Cada use case ganha um `*.usecase.integration.test.ts` ao lado**, contra o banco de teste, no padrão dos de [activities/application](../../apps/server/src/activities/application/): `beforeAll(IntegrationTestHelper.setupTestDatabase)` + `afterEach(IntegrationTestHelper.truncate(tabela))`, cobrindo sucesso e cada erro que o use case lança.
 
 ## Antes de dizer que terminou
 
 - `pnpm typecheck` passa (rode da raiz do worktree).
-- `pnpm --filter @mystatistics/server test` passa. Testes só existem no `apps/server` — não rode `pnpm test` da raiz.
+- `pnpm --filter @mystatistics/server test` passa (precisa do `pnpm db:up`: a integração usa o `db-test`, que é compartilhado — não rode junto com outro agente). Testes só existem no `apps/server` — não rode `pnpm test` da raiz.
 - Se mexeu em algo que roda, suba com `pnpm dev:server` e **exercite a rota de verdade** — curl/checagem real, não só "compilou". Cheque o caminho de erro também (dado inexistente, body inválido, banco fora).
 - Migração gerada e aplicada quando o schema mudou.
 - Critérios da feature escritos em **Critérios de aceite propostos**, no relatório. O manager consolida na §5 do ACCEPTANCE.md.
@@ -58,7 +69,7 @@ O Postgres e as portas (`:3333`, `:5173`) são **compartilhados** com a sessão 
 
 ## Commits
 
-Regra 2 do CLAUDE.md à risca: commits pequenos e objetivos (`<tipo>: <imperativo>` em inglês), **sem nenhuma assinatura/co-autoria** (nada de `Co-Authored-By`, mesmo que o ambiente sugira), sem misturar refactor com feature. **No fluxo de agentes, você está autorizado a commitar na sua própria branch do worktree**, em commits que contam a história da entrega (ex.: tabela + migração → rota → teste). Nunca commite em `main`, nunca faça merge, nunca dê `push`.
+Regra 2 do CLAUDE.md à risca: commits pequenos e objetivos (`<tipo>: <imperativo>` em inglês), **sem nenhuma assinatura/co-autoria** (nada de `Co-Authored-By`, mesmo que o ambiente sugira), sem misturar refactor com feature. **No fluxo de agentes, você está autorizado a commitar na sua própria branch do worktree**, em commits que contam a história da entrega (ex.: tabela + migração → repository → use case + teste → controller). Nunca commite em `main`, nunca faça merge, nunca dê `push`.
 
 ## Relatório final (obrigatório e curto)
 

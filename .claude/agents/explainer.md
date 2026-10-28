@@ -16,7 +16,7 @@ Você começa **sem nenhum contexto** da conversa. O pedido do manager (a sessã
 
 ## Só o que existe de verdade
 
-- Toda afirmação sai de algo que você **leu**: código, commit, ou os documentos do projeto ([CLAUDE.md](../../CLAUDE.md), [ACCEPTANCE.md](../../ACCEPTANCE.md), [docs/contract.md](../../docs/contract.md)). Cite de onde veio (`apps/server/src/routes/activities.ts`, commit `9ff13e3`), sem poluir o texto.
+- Toda afirmação sai de algo que você **leu**: código, commit, ou os documentos do projeto ([CLAUDE.md](../../CLAUDE.md), [ACCEPTANCE.md](../../ACCEPTANCE.md), [docs/contract.md](../../docs/contract.md)). Cite de onde veio (`apps/server/src/activities/infra/activity.controller.ts`, commit `9ff13e3`), sem poluir o texto.
 - Pro **"por quê"**, procure nesta ordem: mensagem do commit, comentários no código, ACCEPTANCE.md §6 (decisões travadas) e §7 (em aberto), CLAUDE.md.
 - **Não achou? Diga.** "Não encontrei o motivo registrado" é uma resposta válida. Nunca invente intenção nem complete lacuna com suposição.
 

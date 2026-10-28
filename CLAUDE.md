@@ -97,9 +97,9 @@ O front tem um agente próprio ([.claude/agents/frontend.md](.claude/agents/fron
 | `pnpm dev:server` | Só a API (:3333) |
 | `pnpm build` | Build de todos os pacotes |
 | `pnpm typecheck` | `tsc --noEmit` em todos os pacotes |
-| `pnpm test` | Testes de todos os pacotes (`bun test`) |
-| `pnpm db:up` / `pnpm db:down` | Sobe/derruba o Postgres do [docker-compose.yml](docker-compose.yml) |
-| `pnpm db:generate` | Gera a migração SQL a partir do [schema.ts](apps/server/src/db/schema.ts) |
+| `pnpm --filter @mystatistics/server test` | Testes do server: unitários + integração (precisa do `pnpm db:up`). Só um tipo: `test:unit` / `test:integration` |
+| `pnpm db:up` / `pnpm db:down` | Sobe/derruba os Postgres do [docker-compose.yml](docker-compose.yml): `db` (dev) e `db-test` (testes de integração, `:5434`) |
+| `pnpm db:generate` | Gera a migração SQL a partir dos `*.schema.ts` dos módulos do server |
 | `pnpm db:migrate` | Aplica as migrações pendentes no banco |
 | `pnpm db:studio` | Abre o Drizzle Studio pra inspecionar o banco |
 
@@ -114,11 +114,31 @@ O front tem um agente próprio ([.claude/agents/frontend.md](.claude/agents/fron
 
 ## Backend
 
-- **Elysia** é o framework de rotas. Toda rota nova entra em [apps/server/src/index.ts](apps/server/src/index.ts) (ou num módulo Elysia próprio, montado com `.use()` quando o arquivo crescer). O prefixo `/api` já é global.
-- **Drizzle ORM** fala com o Postgres. Nada de SQL solto espalhado: as tabelas ficam em [apps/server/src/db/schema.ts](apps/server/src/db/schema.ts) e as queries usam o `db` de [apps/server/src/db/index.ts](apps/server/src/db/index.ts).
+O server é organizado em **módulos por feature**. O módulo [activities](apps/server/src/activities/) é a referência: módulo novo segue a mesma forma, arquivo por arquivo.
+
+```
+apps/server/src/
+├── app.ts                  Sobe o Elysia: prefixo /api, docs, /health e o app.routes
+├── app.routes.ts           Registro dos controllers — módulo novo entra aqui com .use()
+├── <modulo>/
+│   ├── domain/             <nome>.schema.ts (tabela Drizzle) · <nome>.types.ts (TypeBox só do server)
+│   │                       <nome>.mapper.ts (linha do banco → DTO do contrato) · regras puras + *.unit.test.ts
+│   ├── application/        <verbo>-<nome>.usecase.ts, um por operação, com o *.usecase.integration.test.ts ao lado
+│   └── infra/              <nome>.controller.ts (HTTP) · <nome>.repository.ts (queries)
+└── shared/                 Transversal do server — não confundir com packages/shared
+    ├── infra/              base.controller.ts · databases/postgres.ts · env/env.ts · errors/
+    └── utils/test-helpers/ integration-test-helper.ts
+```
+
+- **Cada camada faz uma coisa.** O **controller** valida a entrada com os schemas, chama o use case e define o status — sem regra nem query. O **use case** tem a regra de negócio e lança os erros de `shared/infra/errors`. O **repository** é uma classe de métodos estáticos que só fazem query, cada um com `tx?` opcional como último parâmetro.
+- **Controller nasce de `createController({ prefix, tags })`** ([base.controller.ts](apps/server/src/shared/infra/base.controller.ts)), com `detail.summary` em cada rota — é o que aparece em `/api/docs`. O prefixo `/api` já é global.
+- **Erro é classe.** `NotFoundError`, `UnprocessableEntityError(message, code)` e as próximas estendem `HttpError`; o handler global formata no shape único. Status novo = classe nova em [shared/infra/errors](apps/server/src/shared/infra/errors/).
+- **Use case que lê e depois escreve abre `db.transaction`** e passa o `tx` para todo método do repository chamado dentro dela.
+- **Drizzle ORM** fala com o Postgres. Nada de SQL solto: a tabela fica no `domain/<nome>.schema.ts` do módulo (o drizzle-kit acha todo `*.schema.ts` de `src`) e as queries só no repository, usando o `db` de [postgres.ts](apps/server/src/shared/infra/databases/postgres.ts).
 - **Mudou o schema? Gere a migração.** `pnpm db:generate` e depois `pnpm db:migrate`. Migração é versionada e vai no commit — nunca altere a tabela na mão pelo Studio.
-- **Env**: o `.env` fica na **raiz**, não em `apps/server`. As variáveis são validadas na subida em [apps/server/src/env.ts](apps/server/src/env.ts) — se faltar uma, o server morre na hora com mensagem clara, e é isso que a gente quer.
+- **Env**: o `.env` fica na **raiz**, não em `apps/server`. As variáveis são validadas na subida em [env.ts](apps/server/src/shared/infra/env/env.ts) — se faltar uma, o server morre na hora com mensagem clara, e é isso que a gente quer.
 - Se o banco cair, `/api/health` responde `503` com `db: "down"`. Rotas novas não devem esconder falha de banco atrás de `200`.
+- **Testes.** Regra pura ganha `*.unit.test.ts`, sem banco. Cada use case ganha `*.usecase.integration.test.ts`, contra o `db-test` (via [.env.test](.env.test)). O `IntegrationTestHelper` recria o schema a partir das migrações e se recusa a rodar fora de um banco `*_test`.
 - Antes de dizer que terminou: rode `pnpm typecheck`. Se mexeu em algo que roda, suba com `pnpm dev` e confira de verdade — não afirme que funciona sem ter visto funcionar.
 
 ---
@@ -151,5 +171,5 @@ O **explainer** fica fora do fluxo: só é chamado quando eu pedir explicitament
 - **Contrato e critérios têm dono único.** No fluxo de agentes, só o manager escreve em `packages/shared`, `docs/contract.md` e `ACCEPTANCE.md`. Isso detalha a "zona compartilhada" de **Agentes e fronteiras**: back e front trabalham em branches paralelas, e se os dois mexessem no contrato ele divergiria e o merge conflitaria. Precisou mudar? Vira pendência no relatório.
 - **Commits dos agentes.** Backend e frontend estão autorizados a commitar **na própria branch do worktree**. A Regra 2 vale inteira (commits pequenos, `<tipo>: <imperativo>`, sem co-autoria). Nunca em `main`, nunca merge, nunca `push`. O reviewer não commita: deixa os testes no worktree e lista no relatório.
 - **Worktrees** ficam em `.claude/worktrees/`, ignorado no git. O [.worktreeinclude](.worktreeinclude) copia o `.env` local pra eles. O `node_modules` não vem junto: o primeiro passo do agente no worktree é `pnpm install --frozen-lockfile`.
-- **Recursos compartilhados.** Todos os worktrees usam o **mesmo** Postgres e as **mesmas** portas (`:3333`, `:5173`). Agente não mata processo que não subiu (nada de `taskkill //IM bun.exe`) e informa as migrações que aplicou no banco local.
-- **Testes só no server.** Só o `apps/server` tem testes (unitários de lógica pura e, depois, de integração); `apps/web` e `packages/shared` não têm. Rode `pnpm --filter @mystatistics/server test` — não rode `pnpm test` da raiz.
+- **Recursos compartilhados.** Todos os worktrees usam os **mesmos** Postgres (`db` e `db-test`) e as **mesmas** portas (`:3333`, `:5173`). Agente não mata processo que não subiu (nada de `taskkill //IM bun.exe`), informa as migrações que aplicou no banco local e não roda a suíte de integração ao mesmo tempo que outro agente (ela recria o schema do `db-test`).
+- **Testes só no server.** Só o `apps/server` tem testes (unitários e de integração); `apps/web` e `packages/shared` não têm. Rode `pnpm --filter @mystatistics/server test` com o `pnpm db:up` de pé — não rode `pnpm test` da raiz.

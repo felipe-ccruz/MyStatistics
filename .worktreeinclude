@@ -2,5 +2,6 @@
 # Só o estritamente necessário — nunca segredo de produção.
 
 # .env local de desenvolvimento: DATABASE_URL do Postgres do docker-compose e PORT.
-# Sem ele o server não sobe (apps/server/src/env.ts) e o drizzle-kit não acha o banco.
+# Sem ele o server não sobe (apps/server/src/shared/infra/env/env.ts) e o drizzle-kit não acha o banco.
+# O .env.test não entra aqui: ele é versionado.
 .env

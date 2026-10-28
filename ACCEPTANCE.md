@@ -149,6 +149,8 @@ Uma feature só está pronta quando **todos** estes passam:
 | Server | Bun + **Elysia** |
 | ORM | **Drizzle** (driver `postgres.js`) |
 | Migrações | `drizzle-kit` — versionadas em `apps/server/drizzle/` e commitadas |
+| Estrutura do server | **Módulos por feature** em `apps/server/src/<modulo>/`, com `domain` / `application` / `infra`: controller → use case → repository. Módulo de referência: `activities`. |
+| Testes | Só no server, com `bun test`: **unitário** para regra pura e **integração** por use case, contra um Postgres de teste separado (`db-test`) recriado a partir das migrações. |
 | Banco | Postgres em Docker Compose (host `:5433` → container `5432`, pra não colidir com Postgres local) |
 | Usuários | **Multiusuário.** Todo dado tem dono (`user_id`). Perfil privado por padrão, com portfólio público opcional e visibilidade escolhida item a item. |
 | Modelo de Atividade | `duration_minutes` (inteiro; horas+minutos são só a entrada). `date` como **dia de calendário** (sem hora → sem fuso). Categoria como **pgEnum + TypeBox** derivados de uma lista única (`ACTIVITY_CATEGORIES`) em `shared`: `study` e `exercise`, valores em inglês (`exercise` cobre qualquer exercício físico). |
