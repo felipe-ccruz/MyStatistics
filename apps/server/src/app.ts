@@ -1,10 +1,10 @@
 import { Elysia } from "elysia";
 import { openapi } from "@elysiajs/openapi";
 import type { HealthResponse, HelloResponse } from "@mystatistics/shared";
-import { env } from "@/env";
-import { pingDb } from "@/db";
-import { errorHandler } from "@/errors";
-import { activities } from "@/routes/activities";
+import { appRoutes } from "@/app.routes";
+import { pingDb } from "@/shared/infra/databases/postgres";
+import { env } from "@/shared/infra/env/env";
+import { errorHandler } from "@/shared/infra/errors/global-error-handler";
 
 const app = new Elysia({ prefix: "/api" })
   .use(errorHandler)
@@ -20,7 +20,7 @@ const app = new Elysia({ prefix: "/api" })
       },
     }),
   )
-  .use(activities)
+  .use(appRoutes)
   .get("/health", async ({ set }): Promise<HealthResponse> => {
     const dbUp = await pingDb();
     if (!dbUp) set.status = 503;

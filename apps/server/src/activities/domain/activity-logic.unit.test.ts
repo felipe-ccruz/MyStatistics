@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { toDurationMinutes, todayISO } from "./activity-logic";
-import { HttpError } from "@/errors";
+import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
 
 describe("toDurationMinutes", () => {
   it("soma horas e minutos em minutos totais", () => {
@@ -10,7 +10,7 @@ describe("toDurationMinutes", () => {
   });
 
   it("rejeita duração zero", () => {
-    expect(() => toDurationMinutes(0, 0)).toThrow(HttpError);
+    expect(() => toDurationMinutes(0, 0)).toThrow(UnprocessableEntityError);
   });
 });
 

@@ -1,7 +1,8 @@
 /**
- * Schema do banco (Drizzle).
+ * Tabela `activities` (Drizzle).
  *
- * Ao adicionar/alterar uma tabela aqui, rode `pnpm db:generate` e depois `pnpm db:migrate`.
+ * O drizzle-kit encontra as tabelas em todo arquivo `*.schema.ts` dentro de `src` (ver drizzle.config.ts).
+ * Ao adicionar/alterar uma tabela, rode `pnpm db:generate` e depois `pnpm db:migrate`.
  */
 
 import { date, integer, pgEnum, pgTable, serial } from "drizzle-orm/pg-core";
@@ -11,9 +12,12 @@ import { ACTIVITY_CATEGORIES } from "@mystatistics/shared/activity";
 export const activityCategory = pgEnum("activity_category", ACTIVITY_CATEGORIES);
 
 /** Uma atividade: tempo (em minutos) gasto numa categoria, num dia. */
-export const activities = pgTable("activities", {
+export const activitiesTable = pgTable("activities", {
   id: serial("id").primaryKey(),
   category: activityCategory("category").notNull(),
   durationMinutes: integer("duration_minutes").notNull(),
   date: date("date").notNull(),
 });
+
+export type ActivityRow = typeof activitiesTable.$inferSelect;
+export type NewActivityRow = typeof activitiesTable.$inferInsert;

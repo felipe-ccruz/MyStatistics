@@ -6,7 +6,8 @@ config({ path: "../../.env" });
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./src/db/schema.ts",
+  // Cada módulo declara as próprias tabelas em `<modulo>/domain/<nome>.schema.ts`.
+  schema: "./src/**/*.schema.ts",
   out: "./drizzle",
   dbCredentials: {
     url: process.env.DATABASE_URL!,

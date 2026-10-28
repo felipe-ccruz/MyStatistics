@@ -1,16 +1,6 @@
 import { Elysia } from "elysia";
 import type { ApiError } from "@mystatistics/shared";
-
-/** Erro de aplicação com HTTP status e código de negócio. O handler o formata no shape único. */
-export class HttpError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-    public readonly apiCode: string,
-  ) {
-    super(message);
-  }
-}
+import { HttpError } from "./http-error";
 
 function body(message: string, code: string): ApiError {
   return { error: { message, code } };

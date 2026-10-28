@@ -1,4 +1,4 @@
-import { HttpError } from "@/errors";
+import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
 
 /**
  * Lógica pura das atividades — sem banco, sem env. Fica isolada aqui para ser
@@ -9,7 +9,7 @@ import { HttpError } from "@/errors";
 export function toDurationMinutes(hours: number, minutes: number): number {
   const total = hours * 60 + minutes;
   if (total <= 0) {
-    throw new HttpError(422, "A duração precisa ser maior que zero.", "INVALID_DURATION");
+    throw new UnprocessableEntityError("A duração precisa ser maior que zero.", "INVALID_DURATION");
   }
   return total;
 }
