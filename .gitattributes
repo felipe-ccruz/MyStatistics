@@ -1,0 +1,3 @@
+# Line endings: LF in the repo and in every checkout (Biome checks it, and agent worktrees are fresh checkouts).
+* text=auto eol=lf
+*.html -text
