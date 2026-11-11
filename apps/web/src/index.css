@@ -114,9 +114,6 @@
   --chart-3: var(--c3);
   --chart-4: var(--acc2);
   --chart-5: var(--hp);
-  --sidebar: var(--card2);
-  --sidebar-foreground: var(--txt);
-  --sidebar-border: var(--line);
 }
 
 @theme inline {
@@ -144,9 +141,6 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-border: var(--sidebar-border);
 
   /* model tokens as utilities: bg-card2, text-acc, border-line2, shadow-glow... */
   --color-bg: var(--bg);
