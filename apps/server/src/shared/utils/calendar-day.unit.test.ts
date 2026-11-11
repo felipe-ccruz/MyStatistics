@@ -1,9 +1,22 @@
 import { describe, expect, it } from "bun:test";
-import { addDaysISO, daysEndingOn, todayISO } from "./calendar-day";
+import { addDaysISO, daysEndingOn, isCalendarDay, todayISO } from "./calendar-day";
 
 describe("todayISO", () => {
   it("devolve uma data no formato YYYY-MM-DD", () => {
     expect(todayISO()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("isCalendarDay", () => {
+  it("aceita dias que existem, inclusive 29 de fevereiro em ano bissexto", () => {
+    expect(isCalendarDay("2026-11-11")).toBe(true);
+    expect(isCalendarDay("2028-02-29")).toBe(true);
+  });
+
+  it("recusa dia que não existe ou fora do formato", () => {
+    for (const text of ["2026-02-31", "2026-02-29", "2026-13-01", "2026-00-10", "2026-11-1", "11/11/2026", ""]) {
+      expect(isCalendarDay(text)).toBe(false);
+    }
   });
 });
 

@@ -1,4 +1,4 @@
-import { addDays, eachDayOfInterval, format, parseISO } from "date-fns";
+import { addDays, eachDayOfInterval, format, isValid, parseISO } from "date-fns";
 
 /**
  * Dia de calendário (`"YYYY-MM-DD"`) do server. Toda regra que fala em "hoje" (data padrão de
@@ -18,6 +18,17 @@ export function todayISO(): string {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * `true` se o texto é um dia de calendário que existe, no formato `"YYYY-MM-DD"`. O padrão do
+ * schema (`^\d{4}-\d{2}-\d{2}$`) deixa passar "2026-02-31"; sem esta checagem o Postgres recusaria
+ * a data e a resposta seria 500.
+ */
+export function isCalendarDay(text: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const parsed = parseISO(text);
+  return isValid(parsed) && format(parsed, DAY_FORMAT) === text;
 }
 
 /** `day` deslocado em `amount` dias (negativo volta no tempo). */

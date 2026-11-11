@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { ActivityController } from "@/activities/infra/activity.controller";
 import { AuthController } from "@/auth/infra/auth.controller";
+import { EntryController } from "@/metrics/infra/entry.controller";
 import { MetricController } from "@/metrics/infra/metric.controller";
 import { ProgressController } from "@/progress/infra/progress.controller";
 
@@ -9,4 +10,5 @@ export const appRoutes = new Elysia()
   .use(AuthController)
   .use(ActivityController)
   .use(ProgressController)
-  .use(MetricController);
+  .use(MetricController)
+  .use(EntryController);
