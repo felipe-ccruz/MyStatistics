@@ -98,7 +98,7 @@ Padrão de mercado para cada responsabilidade. "Já no projeto" = não instale d
   - **Pronto quando:** D1, D2, D4, D10, D11, D12 e D13 estão `✅`.
   - Commit: `docs: lock mvp decisions`
 
-- [ ] **T0.3 — Lint e formatação com Biome** *(se D13 = Biome)*
+- [x] **T0.3 — Lint e formatação com Biome** *(D13 = Biome)* — feito em 2026-11-11
   - `pnpm add -Dw @biomejs/biome`, `biome.json` na raiz respeitando o estilo atual do código (aspas duplas, ponto e vírgula, 2 espaços, linha de 120 colunas), ignorando `apps/server/drizzle/`, `dist/` e o `MyStatistics Dashboard.html`. Scripts na raiz: `lint` (`biome check .`) e `format` (`biome format --write .`).
   - Rode o `format` uma vez e commite **só a formatação**, separada de qualquer outra mudança.
   - Acrescente `pnpm lint` à tabela de comandos do CLAUDE.md e às verificações do "Antes de dizer que terminou" dos agentes.
