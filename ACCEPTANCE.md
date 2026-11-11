@@ -3,7 +3,7 @@
 > Documento vivo. É a fonte da verdade sobre **o que a aplicação precisa fazer** e **quando uma feature está pronta**.
 > Toda feature (`feat:`) termina com este arquivo atualizado. Se um critério aqui não passa, a feature não está pronta.
 
-**Última atualização:** 2026-10-21
+**Última atualização:** 2026-11-11
 
 ---
 
@@ -28,6 +28,9 @@ Registrado aqui para não virar discussão depois. Nada disso entra sem eu mudar
 - Recursos sociais: seguir, curtir, comentar, feed, ranking entre usuários. O portfólio é **só leitura**.
 - Busca ou listagem de perfis públicos. Visitante só chega a um portfólio pelo link.
 - Exportação de dados (CSV, PDF...).
+- Do modelo do dashboard, ficam fora do MVP: inventário/poções, missões secundárias (o modelo as guarda em `localStorage`, o que viola a §4) e avatar customizável.
+- Recuperação de senha e edição de perfil além da visibilidade.
+- Login com Google (OAuth). Entra depois, como plugin do Better Auth.
 
 ## 3. Glossário
 
@@ -155,15 +158,22 @@ Uma feature só está pronta quando **todos** estes passam:
 | Usuários | **Multiusuário.** Todo dado tem dono (`user_id`). Perfil privado por padrão, com portfólio público opcional e visibilidade escolhida item a item. |
 | Modelo de Atividade | `duration_minutes` (inteiro; horas+minutos são só a entrada). `date` como **dia de calendário** (sem hora → sem fuso). Categoria como **pgEnum + TypeBox** derivados de uma lista única (`ACTIVITY_CATEGORIES`) em `shared`: `study` e `exercise`, valores em inglês (`exercise` cobre qualquer exercício físico). |
 | Contrato front↔back | Schemas **TypeBox** em `packages/shared`; Elysia valida request/response com o mesmo schema; o front deriva o tipo (`typeof Schema.static`). Contrato com body de request **exige** schema. |
-| Formato de erro | Toda rota que falha responde `{ error: { message: string; code: string } }` com o HTTP status adequado — o front trata um formato só. |
+| Formato de erro | Toda rota que falha responde `{ error: { message: string; code: string } }` com o HTTP status adequado — o front trata um formato só. Vale também para `/api/auth/*`. A `message` vem em **inglês**, pronta para a UI. |
+| Autenticação | **E-mail + senha com Better Auth** (hash, sessão em cookie httpOnly, tabelas pelo adapter do Drizzle). A lib é chamada por `auth.api.*` dentro do nosso controller: as rotas `/api/auth/*` são nossas, com schema TypeBox no `shared` e erro no formato único. O handler HTTP da lib não é montado. Id de usuário é `text` (padrão da lib). |
+| Atividades antigas na migração multiusuário | Atribuídas a uma conta de dev (`dev@mystatistics.local`), a mais antiga do banco. |
+| Router do front | **React Router v7**, modo biblioteca, com a árvore de rotas isolada num arquivo, para permitir trocar por TanStack Router no futuro. |
+| Dados no front | **TanStack Query** para toda leitura e mutação; formulários com **React Hook Form** validados pelo mesmo schema TypeBox do server. |
+| Gráficos | **Recharts** via `shadcn chart`, carregado sob demanda (`React.lazy`). |
+| Temas | Os dois do modelo (A · Teal Grimoire / B · Violet System), com seletor no header; escolha salva em `localStorage`. |
+| Gamificação | XP, nível, rank, streak, atributos, status e daily quest **calculados no server**, por funções puras testadas, com as regras do `plans/mvp-tasks.md` (D5). |
+| Sessão de estudo | Atividade `study` com o campo opcional `subject`, sem entidade própria. |
+| Métricas e registros (MVP) | Criar, listar e apagar, sem edição. Valor `double precision`, unidade em texto livre, nome único por usuário. |
+| Portfólio | O dono expõe item a item: card de progresso, cada categoria de atividade e cada métrica. O visitante vê **só agregados**, nunca registros individuais. |
+| Lint e formatação | **Biome**. |
 
 ## 7. Decisões em aberto
 
 Resolver quando a primeira feature esbarrar nelas — **perguntar, não assumir**:
 
 - **Modelagem das tabelas**: primeira tabela criada — `activities` (ver §5.6). As de métrica/registro/sessão de estudo nascem na primeira `feat:` que precisar delas.
-- **Gráficos**: qual biblioteca (Recharts, visx, ...) — decidir só quando a primeira tela de gráfico existir.
 - **Fuso horário / "o que é um dia"**: resolvido para atividades usando `date` (dia de calendário, sem hora) — não há UTC a converter. Revisitar se algum dado futuro precisar de timestamp com hora.
-- **Autenticação**: método (e-mail + senha, login com Google, link mágico por e-mail) e mecanismo (sessão em cookie httpOnly vs. token; lib pronta tipo Better Auth vs. feito à mão). Decidir no `feat:` de contas (§5.1.1).
-- **Atividades existentes sem dono**: na migração para multiusuário, os registros atuais vão para o primeiro usuário criado ou são descartados?
-- **Roteamento no front**: o portfólio exige URL própria (`/u/<slug>`) além do login e do dashboard, então **vai precisar de router**. Falta escolher qual (React Router, TanStack Router).
