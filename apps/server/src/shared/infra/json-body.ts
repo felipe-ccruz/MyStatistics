@@ -14,9 +14,13 @@ const JSON_CONTENT_TYPE = "application/json";
 /**
  * Recusa com 400 `PARSE` um corpo cujo `content-type` (já sem parâmetros como `; charset=utf-8`)
  * não seja JSON. String vazia = requisição sem corpo (GET, DELETE, logout): passa.
+ *
+ * Chamado no `onParse` (base.controller.ts). O Elysia embrulha o que é lançado ali no `ParseError`
+ * dele, então na resposta sai a mensagem do handler global para `PARSE` ("Invalid request body.");
+ * a mensagem abaixo é a mesma, para valer igual quando chamada fora do parse.
  */
 export function assertJsonBody(contentType: string): void {
   const mediaType = contentType.trim().toLowerCase();
   if (mediaType === "" || mediaType === JSON_CONTENT_TYPE) return;
-  throw new BadRequestError("The request body must be JSON (content-type: application/json).", "PARSE");
+  throw new BadRequestError("Invalid request body.", "PARSE");
 }
