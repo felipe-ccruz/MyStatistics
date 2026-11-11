@@ -1,4 +1,4 @@
-import { t } from "elysia";
+import { Type as t } from "@sinclair/typebox";
 import type { ActivityCategory } from "./activity";
 
 /** Períodos do resumo de atividades. Cada um termina hoje (inclusive): `7d` = hoje e os 6 dias anteriores. */

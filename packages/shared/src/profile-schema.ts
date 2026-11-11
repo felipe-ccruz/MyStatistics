@@ -1,4 +1,4 @@
-import { t } from "elysia";
+import { Type as t } from "@sinclair/typebox";
 import { PROFILE_VISIBILITIES } from "./auth";
 import { PROFILE_ITEM_KINDS } from "./profile";
 

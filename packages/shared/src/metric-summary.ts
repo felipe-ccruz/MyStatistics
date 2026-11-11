@@ -1,4 +1,4 @@
-import { t } from "elysia";
+import { Type as t } from "@sinclair/typebox";
 
 /** Períodos do resumo de métrica. `7d`/`30d` terminam hoje (inclusive); `all` é a história inteira. */
 export const METRIC_SUMMARY_PERIODS = ["7d", "30d", "all"] as const;

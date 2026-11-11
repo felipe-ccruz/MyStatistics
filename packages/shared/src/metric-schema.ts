@@ -1,4 +1,4 @@
-import { t } from "elysia";
+import { Type as t } from "@sinclair/typebox";
 
 /**
  * Body de `POST /api/metrics`. Regras do server além do schema: o nome é gravado sem

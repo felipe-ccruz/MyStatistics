@@ -1,5 +1,6 @@
-import { t } from "elysia";
+import { Type as t } from "@sinclair/typebox";
 import { SLUG_PATTERN } from "./auth";
+import "./formats";
 
 /**
  * Body de `POST /api/auth/signup`. O server valida com ESTE schema (`{ body: SignUp }`)
