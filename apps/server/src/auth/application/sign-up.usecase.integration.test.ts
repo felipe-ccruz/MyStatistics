@@ -4,6 +4,7 @@ import { db } from "@/shared/infra/databases/postgres";
 import { IntegrationTestHelper } from "@/shared/utils/test-helpers/integration-test-helper";
 import { accountsTable, sessionsTable, usersTable } from "../domain/auth.schema";
 import { ProfileRepository } from "../infra/profile.repository";
+import { UserRepository } from "../infra/user.repository";
 import { signUpUseCase } from "./sign-up.usecase";
 
 async function usersWithEmail(email: string) {
@@ -78,6 +79,55 @@ describe("signUpUseCase - Integration", () => {
 
       expect(error).toMatchObject({ status: 409, apiCode: "SLUG_TAKEN" });
       expect(await usersWithEmail("late@test.local")).toHaveLength(0);
+    });
+
+    it("desfaz usuário, credencial e sessão e relança o erro original quando o perfil falha por outro motivo", async () => {
+      const original = new Error("connection lost");
+      const create = spyOn(ProfileRepository, "create").mockRejectedValueOnce(original);
+
+      const error = await IntegrationTestHelper.rejectionOf(
+        signUpUseCase({ email: "boom@test.local", password: "correct-horse", slug: "boom" }),
+      );
+      create.mockRestore();
+
+      expect(error).toBe(original);
+      expect(await usersWithEmail("boom@test.local")).toHaveLength(0);
+      expect(await db.select().from(sessionsTable)).toHaveLength(0);
+      expect(await db.select().from(accountsTable)).toHaveLength(0);
+    });
+
+    it("relança o erro original quando nem a compensação consegue apagar o usuário", async () => {
+      const original = new Error("connection lost");
+      const create = spyOn(ProfileRepository, "create").mockRejectedValueOnce(original);
+      const remove = spyOn(UserRepository, "delete").mockRejectedValueOnce(new Error("still down"));
+      const log = spyOn(console, "error").mockImplementation(() => {});
+
+      const error = await IntegrationTestHelper.rejectionOf(
+        signUpUseCase({ email: "orphan@test.local", password: "correct-horse", slug: "orphan" }),
+      );
+      const logCalls = log.mock.calls.length;
+      create.mockRestore();
+      remove.mockRestore();
+      log.mockRestore();
+
+      expect(error).toBe(original);
+      expect(logCalls).toBe(1);
+    });
+
+    it("responde EMAIL_TAKEN para o segundo de dois cadastros simultâneos com o mesmo e-mail", async () => {
+      const log = spyOn(console, "error").mockImplementation(() => {});
+
+      const results = await Promise.allSettled([
+        signUpUseCase({ email: "twin@test.local", password: "correct-horse", slug: "twin-a" }),
+        signUpUseCase({ email: "twin@test.local", password: "correct-horse", slug: "twin-b" }),
+      ]);
+      log.mockRestore();
+
+      const rejected = results.filter((result) => result.status === "rejected");
+      expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0]?.reason).toMatchObject({ status: 409, apiCode: "EMAIL_TAKEN" });
+      expect(await usersWithEmail("twin@test.local")).toHaveLength(1);
     });
   });
 });

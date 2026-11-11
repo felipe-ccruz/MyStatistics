@@ -1,4 +1,5 @@
 import { isAPIError } from "better-auth/api";
+import { uniqueViolationConstraint } from "@/shared/infra/databases/postgres-errors";
 import { ConflictError } from "@/shared/infra/errors/conflict-error";
 import type { HttpError } from "@/shared/infra/errors/http-error";
 import { UnauthorizedError } from "@/shared/infra/errors/unauthorized-error";
@@ -12,6 +13,9 @@ import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-en
 export const EMAIL_TAKEN_MESSAGE = "An account with this email already exists.";
 export const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password.";
 
+/** Nome que o drizzle-kit deu ao índice único de `users.email` (migração 0002). */
+const USERS_EMAIL_UNIQUE = "users_email_unique";
+
 /** Códigos do Better Auth para dado que o nosso schema TypeBox já deveria ter barrado. */
 const VALIDATION_CODES = new Set(["INVALID_EMAIL", "INVALID_PASSWORD", "PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG"]);
 
@@ -20,6 +24,12 @@ const VALIDATION_CODES = new Set(["INVALID_EMAIL", "INVALID_PASSWORD", "PASSWORD
  * (aí quem chamou relança o original e ele vira 500 `INTERNAL`, como qualquer falha inesperada).
  */
 export function toAuthHttpError(error: unknown): HttpError | null {
+  // Dois cadastros com o mesmo e-mail ao mesmo tempo: os dois passam pela checagem da lib e o
+  // índice único barra o segundo. Pode chegar cru (erro do driver) ou dentro da `cause`.
+  if (uniqueViolationConstraint(error) === USERS_EMAIL_UNIQUE) {
+    return new ConflictError(EMAIL_TAKEN_MESSAGE, "EMAIL_TAKEN");
+  }
+
   if (!isAPIError(error)) return null;
 
   const code = error.body?.code;

@@ -11,6 +11,27 @@ describe("toAuthHttpError", () => {
     }
   });
 
+  it("traduz a violação do índice único de e-mail (corrida) em 409 EMAIL_TAKEN, crua ou na cause", () => {
+    const driverError = Object.assign(new Error("duplicate key"), {
+      code: "23505",
+      constraint_name: "users_email_unique",
+    });
+    const wrapped = new APIError("UNPROCESSABLE_ENTITY", { code: "FAILED_TO_CREATE_USER", message: "Failed" });
+    Object.defineProperty(wrapped, "cause", { value: new Error("Failed query", { cause: driverError }) });
+
+    expect(toAuthHttpError(driverError)).toMatchObject({ status: 409, apiCode: "EMAIL_TAKEN" });
+    expect(toAuthHttpError(wrapped)).toMatchObject({ status: 409, apiCode: "EMAIL_TAKEN" });
+  });
+
+  it("não confunde outra violação de unicidade com e-mail repetido", () => {
+    const slugError = Object.assign(new Error("duplicate key"), {
+      code: "23505",
+      constraint_name: "profiles_slug_unique",
+    });
+
+    expect(toAuthHttpError(slugError)).toBeNull();
+  });
+
   it("traduz e-mail ou senha errados em 401 INVALID_CREDENTIALS", () => {
     const error = new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "Invalid" });
 

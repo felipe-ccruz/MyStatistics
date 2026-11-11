@@ -24,6 +24,16 @@ export class UserRepository {
     return row ?? null;
   }
 
+  /** `true` se já há conta com este e-mail (o Better Auth grava o e-mail em minúsculas). */
+  static async existsByEmail(email: string, tx?: Transaction): Promise<boolean> {
+    const [row] = await (tx ?? db)
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.email, email.toLowerCase()))
+      .limit(1);
+    return row !== undefined;
+  }
+
   /** Apaga o usuário; sessões, contas e perfil vão junto (on delete cascade). */
   static async delete(userId: string, tx?: Transaction): Promise<void> {
     await (tx ?? db).delete(usersTable).where(eq(usersTable.id, userId));
