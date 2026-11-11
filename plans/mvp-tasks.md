@@ -110,7 +110,7 @@ Padrão de mercado para cada responsabilidade. "Já no projeto" = não instale d
 | # | Decisão | Opções | Recomendação | Fase | Status |
 | --- | --- | --- | --- | --- | --- |
 | D1 | **Autenticação** | (a) **Better Auth** (e-mail + senha, sessão em cookie, adapter Drizzle) · (b) feita à mão (`Bun.password` + tabela de sessões) · (c) só login com Google | **(a) Better Auth**: é o padrão atual em TypeScript, traz hash de senha, sessão, cookie seguro e rate limit prontos, e tem adapter para Drizzle e integração documentada com Elysia. **Custo:** as rotas `/api/auth/*` respondem no formato de erro do Better Auth, não no `ApiError` — exige registrar essa exceção na §6 do ACCEPTANCE e no `docs/contract.md`; o front trata via o client do Better Auth. Login com Google pode entrar depois como plugin. | 1 | ✅ **Better Auth envolvido no nosso controller** (2026-11-11): o Better Auth cuida de hash, sessão, cookie e tabelas; as rotas `/api/auth/signup|login|logout|me` são nossas, com schemas TypeBox no `shared` e erro no `ApiError` (sem exceção ao formato único). O handler HTTP da lib **não** é montado. Id de usuário **string** (padrão da lib). Login com Google fica para depois (aí monta-se o handler para o callback OAuth). Tasks T1.2–T1.5 e T4.1–T4.2 ajustadas. |
-| D2 | **Router do front** | React Router v7 · TanStack Router | **React Router v7** (modo biblioteca): o mais usado, poucas rotas, sem necessidade de geração de código. | 3 | ✅ React Router v7, modo biblioteca, **isolado** (rotas num arquivo só) para permitir migrar para TanStack Router no futuro (2026-11-11). T3.6 ajustada. |
+| D2 | **Router do front** | React Router v7 · TanStack Router | **React Router v7** (modo biblioteca): o mais usado, poucas rotas, sem necessidade de geração de código. | 3 | ✅ React Router v7, modo biblioteca, **isolado** (rotas num arquivo só) para permitir migrar para TanStack Router no futuro (2026-11-11). T3.6 ajustada. React Router v8 já existe; instalado `react-router@^7` (7.18.5) conforme a decisão. |
 | D3 | **Gráficos** | Recharts via `shadcn add chart` · barras em CSS puro (como o modelo) · visx | **Recharts via shadcn chart**, carregado com `React.lazy` só no painel de gráfico, para não pesar a carga inicial. Barras com `shape-rendering: crispEdges` e cantos retos para manter o visual pixel. | 7 | ✅ Recharts via shadcn chart, lazy (2026-11-11) |
 | D4 | **Atividades atuais sem dono** | Apagar · atribuir ao primeiro usuário criado | **Apagar** na migração: são dados de dev. | 2 | ✅ **Atribuir** a uma conta de dev `dev@mystatistics.local` (slug `dev`), criada antes da migração (2026-11-11). T2.1 ajustada. |
 | D5 | **Gamificação com 2 categorias** | Ver "Regras de progresso propostas" abaixo | Adotar o bloco como está. | 6 | ✅ Bloco adotado como está (2026-11-11) |
@@ -224,25 +224,26 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** D2, D11. **Território:** só `apps/web`.
 
-- [ ] **T3.1 — Tokens de tema do modelo**
+- [x] **T3.1 — Tokens de tema do modelo** — feito em 2026-11-11
   - Substitua as variáveis neutras do shadcn em `apps/web/src/index.css` pelas do modelo: copie os blocos `[data-dir="a"]` e `[data-dir="b"]` (`--bg`, `--bgimg`, `--card`, `--card2`, `--inset`, `--line`, `--line2`, `--acc`, `--acc2`, `--ink`, `--glow*`, `--tglow`, `--txt`, `--mut`, `--dim`, `--off`, `--flame`, `--hp`, `--c1..--c3`, `--av-*`, `--r`, `--title` etc.).
   - Mapeie as variáveis do shadcn para elas (`--background: var(--bg)`, `--card: var(--card)`, `--primary: var(--acc)`, `--border: var(--line)`, `--radius: var(--r)`…), para os componentes de `components/ui` herdarem o tema. Exponha as do modelo no `@theme inline` do Tailwind para usar como classe (`bg-card2`, `text-acc`…).
   - O atributo vai no `<html>`: `data-dir="a"` por padrão.
   - **Pronto quando:** trocar `data-dir` à mão no DevTools muda todas as cores; `pnpm typecheck` passa.
   - Commit: `style: port dashboard theme tokens`
 
-- [ ] **T3.2 — Fontes com Fontsource**
+- [x] **T3.2 — Fontes com Fontsource** — feito em 2026-11-11
   - `pnpm --filter @mystatistics/web add @fontsource/inter @fontsource/jetbrains-mono @fontsource/pixelify-sans @fontsource/silkscreen`.
   - Importe **só o subset latin e só os pesos que o modelo usa** (confira no `<style>` do template), pelos arquivos por subset/peso do Fontsource (ex.: `@fontsource/inter/latin-400.css`). Não importe o pacote inteiro.
   - **Pronto quando:** no `pnpm --filter @mystatistics/web build`, os `.woff2` somam menos de 200 KB; os títulos aparecem em pixel font nos dois temas.
   - Commit: `style: self-host latin subsets of dashboard fonts`
 
-- [ ] **T3.3 — Kit de pixel art**
+- [x] **T3.3 — Kit de pixel art** — feito em 2026-11-11
   - Implemente o [plans/pixel-art.md](pixel-art.md) §2: `apps/web/src/pixel/` com `sprite.ts` (grade → um `<path>` por cor, memoizado), `PixelSprite.tsx` (`size`, `className`, `title` → `role="img"`, senão `aria-hidden`), `sprites/icons.ts` (ícones do modelo **sem** `apple`), `sprites/avatar.ts` (metade + espelho + paleta + camadas cabeça/corpo + piscar) e `pixel.css` (keyframes `avBob`, `avBlink`, `flick` com `steps(1)` e `@media (prefers-reduced-motion: reduce)` parando os loops).
   - **Pronto quando:** uma página temporária (não commitada) mostra todos os ícones em 10/16/26 px e o avatar animado, nítidos com zoom de 110% e 125%, sem linhas entre pixels; o avatar tem no máximo 1 `<path>` por cor no DOM.
+  - *Nota (2026-11-11):* com as camadas animáveis (corpo, cabeça, piscar) o critério vale **por camada**: 17 `<path>` para 11 cores, contra centenas de `<rect>` no modelo. Fontes: no máximo 2 pesos por família (400/600), ~105 KB de `.woff2`.
   - Commit: `feat: add pixel sprite renderer, icons and avatar`
 
-- [ ] **T3.4 — Cliente da API com TanStack Query**
+- [x] **T3.4 — Cliente da API com TanStack Query** — feito em 2026-11-11
   - `pnpm --filter @mystatistics/web add @tanstack/react-query` (e `@tanstack/react-query-devtools` como dev).
   - `apps/web/src/lib/api.ts`: função `api<T>()` sobre `fetch` em `/api/...` relativo, `credentials: "same-origin"`, tipada pelos contratos de `@mystatistics/shared`. Resposta de erro → lança `ApiRequestError` com `status`, `code` e `message` do `ApiError`; falha de rede → código `NETWORK`.
   - `QueryClientProvider` no `main.tsx`. Convenção: uma pasta `apps/web/src/queries/` com um arquivo por recurso (`activities.ts`, `progress.ts`…) exportando as `queryKey`s, os `useQuery` e os `useMutation` (que invalidam as chaves afetadas no `onSuccess`). Nada de `fetch` direto em componente.
@@ -250,7 +251,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
   - **Pronto quando:** `pnpm typecheck` passa; uma query de teste de `/api/health` devolve `HealthResponse` e aparece no devtools.
   - Commit: `feat: add typed api client with tanstack query`
 
-- [ ] **T3.5 — Componentes base no estilo do modelo**
+- [x] **T3.5 — Componentes base no estilo do modelo** — feito em 2026-11-11
   - shadcn (dentro de `apps/web`): `pnpm dlx shadcn@latest add dialog sonner switch tabs tooltip`.
   - Reestilize os componentes do shadcn com os tokens do tema e o visual do modelo (cantos de `--r`, bordas `--line`, brilho `--glow`). Use **class-variance-authority** para as variantes.
   - `components/game/`: `Panel` (card com título em `--title` e a moldura de cantos), `SegmentedBar` (barra com `repeating-linear-gradient` e `transition: width .6s steps(12)`), `PixelButton`.
@@ -259,7 +260,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
   - **Pronto quando:** os componentes aparecem certos nos dois temas.
   - Commit: `feat: add game-styled components and state views`
 
-- [ ] **T3.6 — Router e casca do app**
+- [x] **T3.6 — Router e casca do app** — feito em 2026-11-11
   - `pnpm --filter @mystatistics/web add react-router` (v7, modo biblioteca, `createBrowserRouter`). Rotas: `/login`, `/signup`, `/` (dashboard, protegido), `/u/:slug` (portfólio, público). Rota desconhecida → "Not found" no estilo do app.
   - **Isolamento do router (D2):** a árvore de rotas fica num arquivo só (`src/app/router.tsx`), as páginas em `src/pages/`, e o resto do app usa do React Router só `Link`, `Navigate`, `useNavigate` e `useParams`. Trocar por TanStack Router no futuro mexe nesse arquivo e em poucos pontos de chamada.
   - Casca do dashboard igual ao header do modelo: ícone `crystal`, "MyStatistics", "System v0.1 · <data formatada com date-fns>", seletor de tema (D11; `localStorage` com `try/catch`), botão "System rules" e lugar para o logout. **Remova** a `Sidebar` atual (placeholder que não existe no modelo).
