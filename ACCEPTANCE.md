@@ -77,16 +77,26 @@ Uma feature só está pronta quando **todos** estes passam:
 - [x] **Dado** que o Postgres está **fora do ar**, **quando** chamo `/api/health`, **então** recebo `503` com `{ status: "degraded", db: "down" }` — a API não finge que está saudável.
 - [x] **Dado** o `pnpm db:up`, **quando** o server sobe, **então** ele conecta no Postgres e `/api/health` responde `200` com `{ status: "ok", db: "ok" }` — validado direto (`:3333`) e pelo proxy do Vite (`:5173`).
 
-### 5.1.1 Contas e perfil — 🔲 a fazer
+### 5.1.1 Contas e perfil — 🟡 back pronto, front a fazer
 
-> Base de tudo o que vem depois: nenhuma outra feature de dado fica pronta sem dono.
+> Base de tudo o que vem depois: nenhuma outra feature de dado fica pronta sem dono. E-mail + senha com Better Auth atrás das nossas rotas `/api/auth/*` (§6). Recuperação de senha, edição de perfil e login com Google estão fora do MVP (§2).
+
+Critérios de ponta a ponta (fecham com as telas da Fase 4):
 
 - [ ] **Dado** que não tenho conta, **quando** me cadastro, **então** minha conta é criada junto com um perfil **privado** e já entro logado.
 - [ ] **Dado** que tenho conta, **quando** faço login, **então** vejo as **minhas** estatísticas e só elas.
 - [ ] **Dado** que não estou logado, **quando** tento abrir o dashboard ou chamar uma rota de dados, **então** sou mandado para o login (front) ou recebo `401 UNAUTHORIZED` no shape único (API).
 - [ ] **Dado** que estou logado, **quando** faço logout, **então** a sessão acaba e um `F5` não me loga de volta.
 - [ ] **Dado** o cadastro, **quando** escolho um `slug` que já existe, **então** recebo um erro claro e escolho outro.
-- [ ] *(a detalhar no `feat:` — método de autenticação, recuperação de senha, edição de perfil)*
+
+API (verificado com `curl` e testes de integração em 2026-11-11):
+
+- [x] **Dado** e-mail e slug livres, **quando** faço `POST /api/auth/signup`, **então** recebo `201` com `Me` (perfil `private`) e um cookie de sessão httpOnly, `SameSite=Lax`, de 30 dias — já estou logado.
+- [x] **Dado** um e-mail já cadastrado (sem diferenciar maiúsculas), **quando** me cadastro, **então** recebo `409 EMAIL_TAKEN`; **dado** um slug já usado, recebo `409 SLUG_TAKEN`. Em nenhum dos dois casos sobra conta ou perfil pela metade.
+- [x] **Dado** e-mail inexistente **ou** senha errada, **quando** faço `POST /api/auth/login`, **então** recebo o **mesmo** `401 INVALID_CREDENTIALS`, com a mesma mensagem.
+- [x] **Dado** que estou logado, **quando** faço `POST /api/auth/logout`, **então** recebo `204`, o cookie expira e `GET /api/auth/me` passa a responder `401 UNAUTHORIZED`. Sem sessão, o logout também responde `204`.
+- [x] **Dado** um body que não é `application/json` (ex.: `<form>` urlencoded vindo de outro site), **quando** chamo qualquer rota com body, **então** recebo `400 PARSE` e nada acontece — sem login nem cadastro por CSRF.
+- [x] **Dado** um banco com atividades sem dono, **quando** aplico a migração de multiusuário, **então** elas vão para o usuário mais antigo; sem usuário, a migração aborta com mensagem clara e nada muda.
 
 ### 5.1.2 Portfólio público — 🔲 a fazer
 
@@ -136,7 +146,7 @@ Uma feature só está pronta quando **todos** estes passam:
 - [x] **Dado** um id, **quando** faço `GET/PATCH/DELETE /api/activities/:id`, **então** busco, edito ou removo (`204`); id inexistente responde `404 NOT_FOUND` no shape único.
 - [x] **Dado** um `PATCH` parcial, **quando** mando só os campos que quero mudar, **então** só eles mudam; `hours`/`minutes` vêm juntos (ou nenhum) para recalcular a duração, e body vazio responde `422`.
 - [ ] **(front)** Tela de cadastro de atividade com os três estados (vazio, carregando, erro) — pendente, agente de front.
-- [ ] **(multiusuário)** Atividade passa a pertencer a um usuário (`user_id`). Todas as rotas acima filtram pelo usuário logado, conforme o isolamento da §4. Depende da §5.1.1.
+- [x] **(multiusuário)** Atividade passa a pertencer a um usuário (`user_id`). Todas as rotas acima exigem sessão (`401 UNAUTHORIZED` sem cookie) e filtram pelo usuário logado: o usuário B não lista, não busca, não edita nem apaga atividade do A (`404 NOT_FOUND`), e a do A continua intacta. Um `userId` no body é ignorado. Verificado em 2026-11-11.
 
 ---
 
@@ -159,6 +169,7 @@ Uma feature só está pronta quando **todos** estes passam:
 | Modelo de Atividade | `duration_minutes` (inteiro; horas+minutos são só a entrada). `date` como **dia de calendário** (sem hora → sem fuso). Categoria como **pgEnum + TypeBox** derivados de uma lista única (`ACTIVITY_CATEGORIES`) em `shared`: `study` e `exercise`, valores em inglês (`exercise` cobre qualquer exercício físico). |
 | Contrato front↔back | Schemas **TypeBox** em `packages/shared`; Elysia valida request/response com o mesmo schema; o front deriva o tipo (`typeof Schema.static`). Contrato com body de request **exige** schema. |
 | Formato de erro | Toda rota que falha responde `{ error: { message: string; code: string } }` com o HTTP status adequado — o front trata um formato só. Vale também para `/api/auth/*`. A `message` vem em **inglês**, pronta para a UI. |
+| Segurança antes de deploy | Hoje o login e o cadastro **não** têm rate limit (a lib só limita pelo próprio handler, que não é montado) e a única defesa contra CSRF é `SameSite=Lax` + body só `application/json`. Antes de qualquer deploy: rate limit em `/api/auth/login` e `/api/auth/signup`. |
 | Autenticação | **E-mail + senha com Better Auth** (hash, sessão em cookie httpOnly, tabelas pelo adapter do Drizzle). A lib é chamada por `auth.api.*` dentro do nosso controller: as rotas `/api/auth/*` são nossas, com schema TypeBox no `shared` e erro no formato único. O handler HTTP da lib não é montado. Id de usuário é `text` (padrão da lib). |
 | Atividades antigas na migração multiusuário | Atribuídas a uma conta de dev (`dev@mystatistics.local`), a mais antiga do banco. |
 | Router do front | **React Router v7**, modo biblioteca, com a árvore de rotas isolada num arquivo, para permitir trocar por TanStack Router no futuro. |
