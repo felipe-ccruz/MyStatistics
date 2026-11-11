@@ -7,7 +7,7 @@ import { ActivityRepository } from "../infra/activity.repository";
 export async function deleteActivityUseCase({ id }: ActivityIdParams): Promise<void> {
   await db.transaction(async (tx) => {
     const current = await ActivityRepository.findById(id, tx);
-    if (!current) throw new NotFoundError("Atividade não encontrada.");
+    if (!current) throw new NotFoundError("Activity not found.");
 
     await ActivityRepository.delete(id, tx);
   });

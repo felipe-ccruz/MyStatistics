@@ -7,6 +7,6 @@ import { ActivityRepository } from "../infra/activity.repository";
 /** Busca uma atividade pelo id; inexistente responde 404 `NOT_FOUND`. */
 export async function getActivityUseCase({ id }: ActivityIdParams): Promise<Activity> {
   const row = await ActivityRepository.findById(id);
-  if (!row) throw new NotFoundError("Atividade não encontrada.");
+  if (!row) throw new NotFoundError("Activity not found.");
   return toActivity(row);
 }

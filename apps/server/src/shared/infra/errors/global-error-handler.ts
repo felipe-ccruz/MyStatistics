@@ -21,16 +21,16 @@ export const errorHandler = new Elysia({ name: "error-handler" }).onError(
     switch (code) {
       case "VALIDATION":
         set.status = 422;
-        return body("Dados inválidos. Verifique os campos enviados.", "VALIDATION");
+        return body("Invalid data. Check the fields sent.", "VALIDATION");
       case "NOT_FOUND":
         set.status = 404;
-        return body("Recurso não encontrado.", "NOT_FOUND");
+        return body("Resource not found.", "NOT_FOUND");
       case "PARSE":
         set.status = 400;
-        return body("Corpo da requisição inválido.", "PARSE");
+        return body("Invalid request body.", "PARSE");
       default:
         set.status = 500;
-        return body("Erro interno do servidor.", "INTERNAL");
+        return body("Internal server error.", "INTERNAL");
     }
   },
 );

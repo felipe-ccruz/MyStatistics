@@ -9,7 +9,7 @@ import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-en
 export function toDurationMinutes(hours: number, minutes: number): number {
   const total = hours * 60 + minutes;
   if (total <= 0) {
-    throw new UnprocessableEntityError("A duração precisa ser maior que zero.", "INVALID_DURATION");
+    throw new UnprocessableEntityError("Duration must be greater than zero.", "INVALID_DURATION");
   }
   return total;
 }

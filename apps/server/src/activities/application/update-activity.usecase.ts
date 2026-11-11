@@ -17,7 +17,7 @@ type UpdateActivityInput = ActivityIdParams & UpdateActivity;
 export async function updateActivityUseCase({ id, ...input }: UpdateActivityInput): Promise<Activity> {
   return db.transaction(async (tx) => {
     const current = await ActivityRepository.findById(id, tx);
-    if (!current) throw new NotFoundError("Atividade não encontrada.");
+    if (!current) throw new NotFoundError("Activity not found.");
 
     const changes: ActivityChanges = {};
     if (input.category !== undefined) changes.category = input.category;
@@ -26,11 +26,11 @@ export async function updateActivityUseCase({ id, ...input }: UpdateActivityInpu
     if (input.hours !== undefined && input.minutes !== undefined) {
       changes.durationMinutes = toDurationMinutes(input.hours, input.minutes);
     } else if (input.hours !== undefined || input.minutes !== undefined) {
-      throw new UnprocessableEntityError("Informe horas e minutos juntos para alterar a duração.", "INVALID_DURATION");
+      throw new UnprocessableEntityError("Send hours and minutes together to change the duration.", "INVALID_DURATION");
     }
 
     if (Object.keys(changes).length === 0) {
-      throw new UnprocessableEntityError("Nada para atualizar.", "EMPTY_UPDATE");
+      throw new UnprocessableEntityError("Nothing to update.", "EMPTY_UPDATE");
     }
 
     const row = await ActivityRepository.update(id, changes, tx);

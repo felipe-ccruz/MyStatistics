@@ -10,7 +10,7 @@ export type ActivityChanges = Partial<Pick<NewActivityRow, "category" | "duratio
 export class ActivityRepository {
   static async create(data: NewActivityRow, tx?: Transaction): Promise<ActivityRow> {
     const [row] = await (tx ?? db).insert(activitiesTable).values(data).returning();
-    if (!row) throw new HttpError(500, "Falha ao gravar a atividade.", "INTERNAL");
+    if (!row) throw new HttpError(500, "Failed to save the activity.", "INTERNAL");
     return row;
   }
 
@@ -25,7 +25,7 @@ export class ActivityRepository {
 
   static async update(id: number, changes: ActivityChanges, tx?: Transaction): Promise<ActivityRow> {
     const [row] = await (tx ?? db).update(activitiesTable).set(changes).where(eq(activitiesTable.id, id)).returning();
-    if (!row) throw new HttpError(500, "Falha ao atualizar a atividade.", "INTERNAL");
+    if (!row) throw new HttpError(500, "Failed to update the activity.", "INTERNAL");
     return row;
   }
 
