@@ -94,6 +94,17 @@ Tipos em [activity.ts](../packages/shared/src/activity.ts) e schemas em [activit
 | GET | `/api/activities/:id` | — | `Activity` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` (id não numérico) |
 | PATCH | `/api/activities/:id` | body `UpdateActivity` | `Activity` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` · `422 INVALID_DURATION` · `422 EMPTY_UPDATE` |
 | DELETE | `/api/activities/:id` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
+| GET | `/api/activities/summary?period=7d\|30d` | query `ActivitySummaryQuery` | `ActivitySummary` | `200` · `401` · `422 VALIDATION` (período fora da lista) |
+
+O resumo ([activity-summary.ts](../packages/shared/src/activity-summary.ts)) cobre o período que termina hoje (dia de calendário do server) e o compara com o período anterior de mesmo tamanho. `perDay` traz **todos** os dias do período, com 0 nos dias vazios.
+
+### Progresso — `apps/server/src/progress/infra/progress.controller.ts`
+
+Tipos e constantes das regras (taxas de XP, metas e recompensas da daily quest, curva de nível, ranks, classes) em [progress.ts](../packages/shared/src/progress.ts). O cálculo é do server (decisão D6), por funções puras testadas em `apps/server/src/progress/domain/`. O front só usa as constantes para a prévia de XP e o texto das regras.
+
+| Método | Rota | Request | Response | Status |
+| --- | --- | --- | --- | --- |
+| GET | `/api/progress` | — | `Progress` do usuário logado | `200` · `401` |
 
 ## Como mudar o contrato
 
