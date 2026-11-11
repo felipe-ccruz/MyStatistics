@@ -2,7 +2,7 @@
 name: frontend
 description: Especialista de UI do MyStatistics. Dono de apps/web (React 19 + Vite + Tailwind 4 + shadcn/ui). Use para construir telas, componentes, estados e a camada de chamada à API — sempre contra os contratos de packages/shared. NÃO mexe em apps/server nem modela banco.
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: opus
 isolation: worktree
 ---
 

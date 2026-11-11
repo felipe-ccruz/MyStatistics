@@ -2,7 +2,7 @@
 name: backend
 description: Especialista de API e dados do MyStatistics. Dono de apps/server (Bun + Elysia + Drizzle/Postgres). Use para rotas, validação, schema do banco, migrações e env. NÃO mexe em apps/web nem em componentes de UI.
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: opus
 isolation: worktree
 ---
 
