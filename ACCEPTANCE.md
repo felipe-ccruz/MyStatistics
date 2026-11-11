@@ -77,17 +77,19 @@ Uma feature só está pronta quando **todos** estes passam:
 - [x] **Dado** que o Postgres está **fora do ar**, **quando** chamo `/api/health`, **então** recebo `503` com `{ status: "degraded", db: "down" }` — a API não finge que está saudável.
 - [x] **Dado** o `pnpm db:up`, **quando** o server sobe, **então** ele conecta no Postgres e `/api/health` responde `200` com `{ status: "ok", db: "ok" }` — validado direto (`:3333`) e pelo proxy do Vite (`:5173`).
 
-### 5.1.1 Contas e perfil — 🟡 back pronto, front a fazer
+### 5.1.1 Contas e perfil — ✅ pronto
 
 > Base de tudo o que vem depois: nenhuma outra feature de dado fica pronta sem dono. E-mail + senha com Better Auth atrás das nossas rotas `/api/auth/*` (§6). Recuperação de senha, edição de perfil e login com Google estão fora do MVP (§2).
 
-Critérios de ponta a ponta (fecham com as telas da Fase 4):
+Critérios de ponta a ponta (exercitados no navegador em 2026-11-11):
 
-- [ ] **Dado** que não tenho conta, **quando** me cadastro, **então** minha conta é criada junto com um perfil **privado** e já entro logado.
-- [ ] **Dado** que tenho conta, **quando** faço login, **então** vejo as **minhas** estatísticas e só elas.
-- [ ] **Dado** que não estou logado, **quando** tento abrir o dashboard ou chamar uma rota de dados, **então** sou mandado para o login (front) ou recebo `401 UNAUTHORIZED` no shape único (API).
-- [ ] **Dado** que estou logado, **quando** faço logout, **então** a sessão acaba e um `F5` não me loga de volta.
-- [ ] **Dado** o cadastro, **quando** escolho um `slug` que já existe, **então** recebo um erro claro e escolho outro.
+- [x] **Dado** que não tenho conta, **quando** me cadastro, **então** minha conta é criada junto com um perfil **privado** e já entro logado.
+- [x] **Dado** que tenho conta, **quando** faço login, **então** vejo as **minhas** estatísticas e só elas.
+- [x] **Dado** que não estou logado, **quando** tento abrir o dashboard ou chamar uma rota de dados, **então** sou mandado para o login (front) ou recebo `401 UNAUTHORIZED` no shape único (API).
+- [x] **Dado** que estou logado, **quando** faço logout, **então** a sessão acaba e um `F5` não me loga de volta.
+- [x] **Dado** o cadastro, **quando** escolho um `slug` que já existe, **então** recebo um erro claro e escolho outro.
+- [x] **Dado** o formulário de cadastro, **quando** informo e-mail inválido ou senha curta, **então** vejo o erro no campo antes de enviar (mesmo schema TypeBox do server); e-mail ou slug já usados aparecem no campo certo, credenciais inválidas no topo.
+- [x] **Dado** que estou logado, **quando** abro `/login` ou `/signup`, **então** vou para o dashboard; **dado** o server fora, a checagem de sessão mostra erro com "Try again", nunca tela branca.
 
 API (verificado com `curl` e testes de integração em 2026-11-11):
 
@@ -134,7 +136,7 @@ API (verificado com `curl` e testes de integração em 2026-11-11):
 - [ ] **Dado** qualquer cálculo estatístico, **quando** ele roda, **então** existe um teste (`bun test`) cobrindo o caso normal **e** o caso degenerado (lista vazia, um elemento, valores iguais).
 - [ ] *(a detalhar)*
 
-### 5.6 Atividades — cadastro (back-end) — ✅ back pronto
+### 5.6 Atividades — cadastro — ✅ pronto
 
 > API pronta e verificada de ponta a ponta contra o Postgres. A **tela** de cadastro é entrega separada do agente de front (por isso os critérios de UI da §4 ficam pendentes aqui).
 
@@ -145,7 +147,7 @@ API (verificado com `curl` e testes de integração em 2026-11-11):
 - [x] **Dado** atividades cadastradas, **quando** faço `GET /api/activities`, **então** recebo a lista ordenada por `date` (desc).
 - [x] **Dado** um id, **quando** faço `GET/PATCH/DELETE /api/activities/:id`, **então** busco, edito ou removo (`204`); id inexistente responde `404 NOT_FOUND` no shape único.
 - [x] **Dado** um `PATCH` parcial, **quando** mando só os campos que quero mudar, **então** só eles mudam; `hours`/`minutes` vêm juntos (ou nenhum) para recalcular a duração, e body vazio responde `422`.
-- [ ] **(front)** Tela de cadastro de atividade com os três estados (vazio, carregando, erro) — pendente, agente de front.
+- [x] **(front)** Modal "Log activity" (categoria, horas, minutos, data opcional sem data futura, prévia de XP pelas regras do `shared`) e painel "Recent history" com os três estados (vazio convida a registrar, carregando, erro com "Try again"); registrar e apagar atualizam a lista sem F5, e o dado sobrevive ao F5. Exercitado no navegador em 2026-11-11.
 - [x] **(multiusuário)** Atividade passa a pertencer a um usuário (`user_id`). Todas as rotas acima exigem sessão (`401 UNAUTHORIZED` sem cookie) e filtram pelo usuário logado: o usuário B não lista, não busca, não edita nem apaga atividade do A (`404 NOT_FOUND`), e a do A continua intacta. Um `userId` no body é ignorado. Verificado em 2026-11-11.
 
 ---

@@ -293,12 +293,12 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** Fases 1 e 3.
 
-- [ ] **T4.1 — Sessão no front** *(D1: sem o client do Better Auth; o front fala só com as nossas rotas)*
+- [x] **T4.1 — Sessão no front** *(D1: sem o client do Better Auth; o front fala só com as nossas rotas)* — feito em 2026-11-11
   - `apps/web/src/queries/auth.ts`: query `["me"]` em `GET /api/auth/me` (200 → logado; 401 → deslogado, **não** é erro) e mutações `signUp`, `signIn`, `signOut` em `POST /api/auth/signup|login|logout`.
   - Rota protegida: deslogado em `/` → `/login`. Logado em `/login` ou `/signup` → `/`. Carregando a sessão → `LoadingState` em tela cheia; outro erro → `ErrorState`.
   - Commit: `feat: add session handling and protected routes`
 
-- [ ] **T4.2 — Telas de cadastro e login**
+- [x] **T4.2 — Telas de cadastro e login** — feito em 2026-11-11
   - `pnpm --filter @mystatistics/web add react-hook-form @hookform/resolvers` e `pnpm dlx shadcn@latest add form`.
   - Formulários com `useForm({ resolver: typeboxResolver(SignUp) })` / `typeboxResolver(SignIn)` — os **mesmos** schemas de `packages/shared` que o server valida (T1.2), sem contrato novo.
   - `/signup`: e-mail, senha, slug (dica do formato + prévia do link `/u/<slug>`). `/login`: e-mail e senha. Sucesso → grava o `Me` na chave `["me"]` e vai para `/`. Visual de "tela de entrada do System" (Panel, título pixel, avatar).
@@ -314,12 +314,12 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** Fases 2 e 4.
 
-- [ ] **T5.1 — Modal "Log activity"**
+- [x] **T5.1 — Modal "Log activity"** — feito em 2026-11-11
   - Igual ao "[REGISTRAR ATIVIDADE]" do modelo, num `Dialog` do shadcn: as duas categorias (ícones `book` e `dumbbell`, taxa de XP visível), horas, minutos, data opcional (padrão hoje, sem data futura) e "Expected reward" calculada a partir das regras de D5 (só prévia; o valor real vem do server na Fase 6).
   - Formulário com React Hook Form + `typeboxResolver(CreateActivity)`. Envio por `useMutation` que invalida as chaves de atividades (e de progresso/resumo, depois da Fase 6). Erros da API (`INVALID_DURATION`, `VALIDATION`) no modal; sucesso → fecha e toast do Sonner.
   - Commit: `feat: add log activity dialog`
 
-- [ ] **T5.2 — Histórico recente**
+- [x] **T5.2 — Histórico recente** — feito em 2026-11-11
   - `pnpm --filter @mystatistics/web add date-fns`.
   - Painel "Recent history" (`GET /api/activities` via `useQuery`): ícone, categoria, quando (`isToday`/`isYesterday`/`format` do date-fns), duração (`1h 05`, `45min`), XP da atividade e botão de apagar com confirmação → `useMutation` de `DELETE` + toast.
   - Estados: vazio ("No activity yet — log your first one" + botão que abre o modal), carregando, erro.
@@ -339,18 +339,18 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
   - `docs/contract.md`: `GET /api/progress` e `GET /api/activities/summary?period=7d|30d`.
   - Commit: `feat: add progress and activity summary contracts to shared`
 
-- [ ] **T6.2 — Regras puras de progresso**
+- [x] **T6.2 — Regras puras de progresso** — feito em 2026-11-11
   - `pnpm --filter @mystatistics/server add date-fns` (aritmética de dias: `addDays`, `subDays`, `eachDayOfInterval`, `differenceInCalendarDays` sobre datas `YYYY-MM-DD` com `parseISO`/`format`).
   - Módulo novo `apps/server/src/progress/`, `domain/` só com funções puras (sem `db`), uma regra por arquivo, cada uma com `*.unit.test.ts` cobrindo o caso normal **e** os degenerados (lista vazia, um dia só, valores iguais, limites exatos como 90 min e a virada de nível) — ACCEPTANCE §5.5: `xp.ts`, `level.ts` (`levelOf`, `rankOf`), `streak.ts`, `attributes.ts`, `status.ts`, `daily-quest.ts`, `class-name.ts`.
   - Entrada comum: minutos por dia e categoria + a data de "hoje" como parâmetro (nada de `new Date()` dentro das regras, para o teste controlar o dia).
   - Commit: `feat: add pure progress rules`
 
-- [ ] **T6.3 — `GET /api/progress`**
+- [x] **T6.3 — `GET /api/progress`** — feito em 2026-11-11
   - `progress/application/get-progress.usecase.ts` (+ integração com atividades em dias controlados) e `progress/infra/progress.controller.ts` com `authGuard`. O repository agrega no SQL (`sum(duration_minutes)` por `date, category`, só do usuário); a regra é a função pura.
   - **Pronto quando:** testes passam; via `curl`, os números batem com uma conta feita à mão.
   - Commit: `feat: add progress endpoint`
 
-- [ ] **T6.4 — `GET /api/activities/summary`**
+- [x] **T6.4 — `GET /api/activities/summary`** — feito em 2026-11-11
   - Função pura `activities/domain/period-summary.ts` (+ unit test com degenerados) e use case no módulo `activities` (+ integração). `perDay` traz **todos** os dias do período (`eachDayOfInterval`), com 0 nos vazios.
   - Commit: `feat: add activity period summary endpoint`
 
@@ -411,7 +411,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
   - Rotas: `GET/POST /api/metrics`, `DELETE /api/metrics/:id`, `GET/POST /api/metrics/:id/entries`, `DELETE /api/metrics/:id/entries/:entryId`.
   - Commit: `feat: add metric and entry contracts to shared`
 
-- [ ] **T9.2 — Back-end de métricas**
+- [x] **T9.2 — Back-end de métricas** — feito em 2026-11-11
   - Módulo `apps/server/src/metrics/`: tabelas `metrics` (`id`, `user_id` fk cascade, `name`, `unit`, único `(user_id, lower(name))`) e `entries` (`id`, `metric_id` fk cascade, `user_id` fk cascade, `value double precision`, `date date`, índice `(metric_id, date)`). Migração.
   - Use cases (um por arquivo, com integração): criar métrica (409 no nome repetido, sem diferenciar maiúsculas), listar, apagar (registros vão junto); lançar registro (data futura → 422 `FUTURE_DATE`; valor não finito → 422 `VALIDATION`), listar (date desc), apagar. Métrica ou registro de outro usuário → 404. Tudo com `authGuard`.
   - Commits: `feat: add metrics and entries tables` → `feat: add metric endpoints` → `feat: add entry endpoints`
