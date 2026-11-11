@@ -48,6 +48,7 @@ Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/s
 | `EMAIL_TAKEN` | 409 | cadastro com e-mail que já tem conta |
 | `SLUG_TAKEN` | 409 | cadastro com `slug` que já é de outro perfil |
 | `NOT_FOUND` | 404 | rota inexistente, recurso com id inexistente, ou recurso de outro usuário |
+| `PROFILE_NOT_FOUND` | 404 | portfólio com slug inexistente **ou** perfil privado (mesma resposta nos dois casos) |
 | `METRIC_NAME_TAKEN` | 409 | métrica com nome que o usuário já usa (sem diferenciar maiúsculas) |
 | `FUTURE_DATE` | 422 | registro de métrica com data depois de hoje |
 | `INVALID_DURATION` | 422 | atividade com duração zero, ou `hours`/`minutes` sem o par no PATCH |
@@ -121,6 +122,21 @@ Tipos em [metric.ts](../packages/shared/src/metric.ts) e schemas em [metric-sche
 | POST | `/api/metrics/:id/entries` | body `CreateEntry` | `Entry` | `201` · `401` · `404 NOT_FOUND` · `422 VALIDATION` · `422 FUTURE_DATE` |
 | DELETE | `/api/metrics/:id/entries/:entryId` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
 | GET | `/api/metrics/:id/summary?period=7d\|30d\|all` | query `MetricSummaryQuery` | `MetricSummary` ([metric-summary.ts](../packages/shared/src/metric-summary.ts)) | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` |
+
+### Perfil e portfólio público — `apps/server/src/profile/infra/`
+
+Tipos em [profile.ts](../packages/shared/src/profile.ts) e schemas em [profile-schema.ts](../packages/shared/src/profile-schema.ts). Itens: o card de progresso, cada categoria de atividade e cada métrica (decisão D9). **Sem linha gravada, o item é oculto**: expor é sempre uma escolha explícita, e item novo nasce oculto.
+
+| Método | Rota | Request | Response | Status |
+| --- | --- | --- | --- | --- |
+| PATCH | `/api/profile` | body `UpdateProfile` | `Profile` | `200` · `401` · `422 VALIDATION` |
+| GET | `/api/profile/items` | — | `ProfileItem[]` (progress, depois as categorias, depois as métricas por nome) | `200` · `401` |
+| PATCH | `/api/profile/items` | body `UpdateProfileItem` | `ProfileItem` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` |
+| GET | `/api/public/profiles/:slug` | — (sem login) | `PublicProfile` só com os itens visíveis | `200` · `404 PROFILE_NOT_FOUND` |
+
+- Slug inexistente **e** perfil privado respondem o **mesmo** `404 PROFILE_NOT_FOUND`, com a mesma mensagem: não dá para descobrir que o perfil existe.
+- Visitante logado (outro usuário) recebe exatamente o que um anônimo recebe. O dono, nessa rota, também.
+- Não existe rota de escrita sob `/api/public`.
 
 ## Como mudar o contrato
 

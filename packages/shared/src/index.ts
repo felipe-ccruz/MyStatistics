@@ -26,6 +26,9 @@ export type { Entry, Metric } from "./metric";
 export { CreateEntry, CreateMetric } from "./metric-schema";
 export type { MetricSummary, MetricSummaryPeriod } from "./metric-summary";
 export { METRIC_SUMMARY_PERIODS, MetricSummaryQuery } from "./metric-summary";
+export type { Profile, ProfileItem, ProfileItemKind, PublicProfile } from "./profile";
+export { PROFILE_ITEM_KINDS } from "./profile";
+export { UpdateProfile, UpdateProfileItem } from "./profile-schema";
 export type { ClassName, DailyQuestGoal, Progress, Rank } from "./progress";
 export {
   CLASS_NAMES,
