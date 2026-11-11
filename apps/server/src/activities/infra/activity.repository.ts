@@ -1,7 +1,8 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db, type Transaction } from "@/shared/infra/databases/postgres";
 import { HttpError } from "@/shared/infra/errors/http-error";
 import { type ActivityRow, activitiesTable, type NewActivityRow } from "../domain/activity.schema";
+import type { DailyCategoryMinutes } from "../domain/day-minutes";
 
 /** Campos que um update pode mudar (o `id` e o dono nunca mudam). */
 export type ActivityChanges = Partial<Pick<NewActivityRow, "category" | "durationMinutes" | "date">>;
@@ -44,5 +45,23 @@ export class ActivityRepository {
 
   static async delete(userId: string, id: number, tx?: Transaction): Promise<void> {
     await (tx ?? db).delete(activitiesTable).where(ownedBy(userId, id));
+  }
+
+  /** Soma dos minutos por dia e categoria entre `from` e `to` (inclusive), agregada no SQL. */
+  static async minutesPerDayAndCategoryBetween(
+    userId: string,
+    from: string,
+    to: string,
+    tx?: Transaction,
+  ): Promise<DailyCategoryMinutes[]> {
+    return (tx ?? db)
+      .select({
+        date: activitiesTable.date,
+        category: activitiesTable.category,
+        minutes: sql<number>`cast(sum(${activitiesTable.durationMinutes}) as integer)`.mapWith(Number),
+      })
+      .from(activitiesTable)
+      .where(and(eq(activitiesTable.userId, userId), gte(activitiesTable.date, from), lte(activitiesTable.date, to)))
+      .groupBy(activitiesTable.date, activitiesTable.category);
   }
 }

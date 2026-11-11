@@ -1,9 +1,16 @@
-import { type Activity, CreateActivity, UpdateActivity } from "@mystatistics/shared";
+import {
+  type Activity,
+  type ActivitySummary,
+  ActivitySummaryQuery,
+  CreateActivity,
+  UpdateActivity,
+} from "@mystatistics/shared";
 import { authGuard } from "@/shared/infra/auth.guard";
 import { createController } from "@/shared/infra/base.controller";
 import { createActivityUseCase } from "../application/create-activity.usecase";
 import { deleteActivityUseCase } from "../application/delete-activity.usecase";
 import { getActivityUseCase } from "../application/get-activity.usecase";
+import { getActivitySummaryUseCase } from "../application/get-activity-summary.usecase";
 import { listActivitiesUseCase } from "../application/list-activities.usecase";
 import { updateActivityUseCase } from "../application/update-activity.usecase";
 import { ActivityIdParams } from "../domain/activity.types";
@@ -40,6 +47,17 @@ export const ActivityController = createController({ prefix: "/activities", tags
     detail: {
       summary: "List activities",
       description: "The logged-in user's activities, most recent first (date desc, then id desc).",
+    },
+  })
+
+  // GET /api/activities/summary?period=7d|30d — antes do `/:id`, para "summary" não ser lido como id.
+  .get("/summary", ({ query, userId }): Promise<ActivitySummary> => getActivitySummaryUseCase({ ...query, userId }), {
+    query: ActivitySummaryQuery,
+    detail: {
+      summary: "Summarize activities over a period",
+      description:
+        "Totals for the period ending today (7d or 30d), every day included with 0 when empty, " +
+        "compared with the previous period of the same length.",
     },
   })
 
