@@ -16,9 +16,12 @@
     "build": "pnpm -r build",
     "start": "pnpm --filter @mystatistics/server start",
     "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "test": "pnpm -r test"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.6.6",
     "concurrently": "^9.1.2",
     "typescript": "^5.7.3"
   }

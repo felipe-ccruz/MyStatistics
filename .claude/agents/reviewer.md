@@ -61,6 +61,7 @@ Você roda no checkout principal, que pode ter trabalho meu sem commit.
 - Usa os componentes de `components/ui` (shadcn), Tailwind, alias `@/`. Mock deixado no código está listado no relatório do front.
 
 **Geral**
+- `pnpm typecheck` e `pnpm lint` (Biome) passam no worktree revisado.
 - TypeScript strict: nada de `any`, nada de `!` ou `as` escondendo um `noUncheckedIndexedAccess`.
 - Segurança: nenhum segredo commitado (`.env`), entrada validada na borda, nada de `dangerouslySetInnerHTML` com dado do usuário, nada sensível em log.
 - Regressões: testes existentes passam; o que está `[x]` na §5 do ACCEPTANCE.md continua valendo.

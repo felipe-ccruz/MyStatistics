@@ -54,7 +54,7 @@ Todo dado que cruza front↔back tem seu tipo/schema em `packages/shared`, e tod
 
 ## Antes de dizer que terminou
 
-- `pnpm typecheck` passa (rode da raiz do worktree).
+- `pnpm typecheck` e `pnpm lint` passam (rode da raiz do worktree; `pnpm format` corrige a formatação).
 - `pnpm --filter @mystatistics/web build` passa.
 - O front não tem testes automatizados (testes só no `apps/server`): não crie arquivo de teste nem instale lib de teste.
 - `pnpm dev:web` sobe sem erro no console e a página responde (`curl http://localhost:5173/`).

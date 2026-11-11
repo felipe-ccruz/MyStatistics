@@ -97,6 +97,8 @@ O front tem um agente próprio ([.claude/agents/frontend.md](.claude/agents/fron
 | `pnpm dev:server` | Só a API (:3333) |
 | `pnpm build` | Build de todos os pacotes |
 | `pnpm typecheck` | `tsc --noEmit` em todos os pacotes |
+| `pnpm lint` | Biome: lint + formatação + ordem dos imports, só confere (`biome check .`) |
+| `pnpm format` | Biome: aplica a formatação e as correções seguras (`biome check --write .`) |
 | `pnpm --filter @mystatistics/server test` | Testes do server: unitários + integração (precisa do `pnpm db:up`). Só um tipo: `test:unit` / `test:integration` |
 | `pnpm db:up` / `pnpm db:down` | Sobe/derruba os Postgres do [docker-compose.yml](docker-compose.yml): `db` (dev) e `db-test` (testes de integração, `:5434`) |
 | `pnpm db:generate` | Gera a migração SQL a partir dos `*.schema.ts` dos módulos do server |
@@ -139,7 +141,7 @@ apps/server/src/
 - **Env**: o `.env` fica na **raiz**, não em `apps/server`. As variáveis são validadas na subida em [env.ts](apps/server/src/shared/infra/env/env.ts) — se faltar uma, o server morre na hora com mensagem clara, e é isso que a gente quer.
 - Se o banco cair, `/api/health` responde `503` com `db: "down"`. Rotas novas não devem esconder falha de banco atrás de `200`.
 - **Testes.** Regra pura ganha `*.unit.test.ts`, sem banco. Cada use case ganha `*.usecase.integration.test.ts`, contra o `db-test` (via [.env.test](.env.test)). O `IntegrationTestHelper` recria o schema a partir das migrações e se recusa a rodar fora de um banco `*_test`.
-- Antes de dizer que terminou: rode `pnpm typecheck`. Se mexeu em algo que roda, suba com `pnpm dev` e confira de verdade — não afirme que funciona sem ter visto funcionar.
+- Antes de dizer que terminou: rode `pnpm typecheck` e `pnpm lint`. Se mexeu em algo que roda, suba com `pnpm dev` e confira de verdade — não afirme que funciona sem ter visto funcionar.
 
 ---
 
@@ -162,7 +164,7 @@ Os agentes ficam em [.claude/agents/](.claude/agents/), versionados. Cada um com
 1. **Manager define/atualiza o contrato.** Em `feat:`, antes vem a Regra 1 (investiga, pergunta, espera minha confirmação). Depois escreve o contrato em `packages/shared` + [docs/contract.md](docs/contract.md), roda `pnpm typecheck` e **commita o contrato** com o meu ok (Regra 2). Worktree nasce de commit: contrato não commitado não chega nos agentes.
 2. **Backend e frontend em paralelo**, cada um no próprio worktree e branch. Cada um commita na própria branch e devolve o relatório, com branch, caminho do worktree e último commit.
 3. **Reviewer revisa e testa** as duas branches. Recebe do manager as branches, os caminhos dos worktrees e os relatórios. Devolve os achados por severidade e um veredito.
-4. **Manager consolida.** Resolve as pendências (pedido de contrato volta pro passo 1), me mostra o resultado, faz o merge **quando eu pedir**, atualiza o ACCEPTANCE.md com os critérios propostos e confere o sistema integrado de verdade: `pnpm typecheck`, testes do server, `pnpm dev` e o fluxo no navegador (os subagents não têm navegador).
+4. **Manager consolida.** Resolve as pendências (pedido de contrato volta pro passo 1), me mostra o resultado, faz o merge **quando eu pedir**, atualiza o ACCEPTANCE.md com os critérios propostos e confere o sistema integrado de verdade: `pnpm typecheck`, `pnpm lint`, testes do server, `pnpm dev` e o fluxo no navegador (os subagents não têm navegador).
 
 O **explainer** fica fora do fluxo: só é chamado quando eu pedir explicitamente ("explica", "chama o explicador").
 

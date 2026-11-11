@@ -60,7 +60,7 @@ O server é organizado em módulos por feature, e o módulo [activities](../../a
 
 ## Antes de dizer que terminou
 
-- `pnpm typecheck` passa (rode da raiz do worktree).
+- `pnpm typecheck` e `pnpm lint` passam (rode da raiz do worktree; `pnpm format` corrige a formatação).
 - `pnpm --filter @mystatistics/server test` passa (precisa do `pnpm db:up`: a integração usa o `db-test`, que é compartilhado — não rode junto com outro agente). Testes só existem no `apps/server` — não rode `pnpm test` da raiz.
 - Se mexeu em algo que roda, suba com `pnpm dev:server` e **exercite a rota de verdade** — curl/checagem real, não só "compilou". Cheque o caminho de erro também (dado inexistente, body inválido, banco fora).
 - Migração gerada e aplicada quando o schema mudou.
