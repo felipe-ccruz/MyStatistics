@@ -119,7 +119,7 @@ Tipos em [metric.ts](../packages/shared/src/metric.ts) e schemas em [metric-sche
 | POST | `/api/metrics` | body `CreateMetric` | `Metric` | `201` · `401` · `422 VALIDATION` · `409 METRIC_NAME_TAKEN` |
 | DELETE | `/api/metrics/:id` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
 | GET | `/api/metrics/:id/entries` | — | `Entry[]` (por `date` desc, depois `id` desc) | `200` · `401` · `404 NOT_FOUND` |
-| POST | `/api/metrics/:id/entries` | body `CreateEntry` | `Entry` | `201` · `401` · `404 NOT_FOUND` · `422 VALIDATION` · `422 FUTURE_DATE` |
+| POST | `/api/metrics/:id/entries` | body `CreateEntry` | `Entry` | `201` · `401` · `404 NOT_FOUND` · `422 VALIDATION` (inclusive dia que não existe, ex.: `2026-02-31`) · `422 FUTURE_DATE` |
 | DELETE | `/api/metrics/:id/entries/:entryId` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
 | GET | `/api/metrics/:id/summary?period=7d\|30d\|all` | query `MetricSummaryQuery` | `MetricSummary` ([metric-summary.ts](../packages/shared/src/metric-summary.ts)) | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` |
 

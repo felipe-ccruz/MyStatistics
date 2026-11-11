@@ -27,6 +27,12 @@ export const RANKS = ["E", "D", "C", "B", "A", "S"] as const;
 
 export type Rank = (typeof RANKS)[number];
 
+/** Nível mínimo de cada rank. O rank é o maior cujo nível mínimo o jogador já alcançou. */
+export const RANK_MIN_LEVEL: Record<Rank, number> = { E: 1, D: 5, C: 10, B: 15, A: 20, S: 30 };
+
+/** Duração de referência de uma sessão de estudo, em minutos: FOCUS = duração média de uma atividade study ÷ este valor. */
+export const FOCUS_SESSION_MINUTES = 75;
+
 /** Classe pelo atributo dominante entre INT e STR; empate → "Adventurer". */
 export const CLASS_NAMES = ["Arcane Student", "Iron Warrior", "Adventurer"] as const;
 
