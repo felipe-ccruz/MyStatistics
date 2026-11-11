@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
-import { toDurationMinutes, todayISO } from "./activity-logic";
+import { toDurationMinutes } from "./activity-logic";
 
 describe("toDurationMinutes", () => {
   it("soma horas e minutos em minutos totais", () => {
@@ -11,11 +11,5 @@ describe("toDurationMinutes", () => {
 
   it("rejeita duração zero", () => {
     expect(() => toDurationMinutes(0, 0)).toThrow(UnprocessableEntityError);
-  });
-});
-
-describe("todayISO", () => {
-  it("devolve uma data no formato YYYY-MM-DD", () => {
-    expect(todayISO()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

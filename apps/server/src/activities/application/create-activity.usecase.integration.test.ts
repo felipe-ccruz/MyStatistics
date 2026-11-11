@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { todayISO } from "@/shared/utils/calendar-day";
 import { IntegrationTestHelper, type TestUser } from "@/shared/utils/test-helpers/integration-test-helper";
-import { todayISO } from "../domain/activity-logic";
 import { ActivityRepository } from "../infra/activity.repository";
 import { createActivityUseCase } from "./create-activity.usecase";
 

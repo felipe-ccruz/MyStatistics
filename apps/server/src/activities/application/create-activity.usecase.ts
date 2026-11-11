@@ -1,7 +1,8 @@
 import type { Activity, CreateActivity } from "@mystatistics/shared";
 import type { SessionUser } from "@/auth/domain/auth.types";
+import { todayISO } from "@/shared/utils/calendar-day";
 import { toActivity } from "../domain/activity.mapper";
-import { toDurationMinutes, todayISO } from "../domain/activity-logic";
+import { toDurationMinutes } from "../domain/activity-logic";
 import { ActivityRepository } from "../infra/activity.repository";
 
 type CreateActivityInput = SessionUser & CreateActivity;
