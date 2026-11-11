@@ -22,6 +22,8 @@ export type { Me, ProfileVisibility } from "./auth";
 export { PROFILE_VISIBILITIES, SLUG_PATTERN } from "./auth";
 export { SignIn, SignUp } from "./auth-schema";
 export type { ApiError } from "./error";
+export type { Entry, Metric } from "./metric";
+export { CreateEntry, CreateMetric } from "./metric-schema";
 export type { ClassName, DailyQuestGoal, Progress, Rank } from "./progress";
 export {
   CLASS_NAMES,

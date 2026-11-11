@@ -48,6 +48,8 @@ Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/s
 | `EMAIL_TAKEN` | 409 | cadastro com e-mail que já tem conta |
 | `SLUG_TAKEN` | 409 | cadastro com `slug` que já é de outro perfil |
 | `NOT_FOUND` | 404 | rota inexistente, recurso com id inexistente, ou recurso de outro usuário |
+| `METRIC_NAME_TAKEN` | 409 | métrica com nome que o usuário já usa (sem diferenciar maiúsculas) |
+| `FUTURE_DATE` | 422 | registro de métrica com data depois de hoje |
 | `INVALID_DURATION` | 422 | atividade com duração zero, ou `hours`/`minutes` sem o par no PATCH |
 | `EMPTY_UPDATE` | 422 | PATCH sem nenhum campo a mudar |
 | `INTERNAL` | 500 | qualquer outra falha |
@@ -105,6 +107,19 @@ Tipos e constantes das regras (taxas de XP, metas e recompensas da daily quest, 
 | Método | Rota | Request | Response | Status |
 | --- | --- | --- | --- | --- |
 | GET | `/api/progress` | — | `Progress` do usuário logado | `200` · `401` |
+
+### Métricas e registros — `apps/server/src/metrics/infra/`
+
+Tipos em [metric.ts](../packages/shared/src/metric.ts) e schemas em [metric-schema.ts](../packages/shared/src/metric-schema.ts). Sem edição no MVP (decisão D8). **Todas exigem sessão** (`401`); métrica ou registro de outro usuário → `404 NOT_FOUND`. Apagar a métrica apaga os registros dela.
+
+| Método | Rota | Request | Response | Status |
+| --- | --- | --- | --- | --- |
+| GET | `/api/metrics` | — | `Metric[]` (por `name`) | `200` · `401` |
+| POST | `/api/metrics` | body `CreateMetric` | `Metric` | `201` · `401` · `422 VALIDATION` · `409 METRIC_NAME_TAKEN` |
+| DELETE | `/api/metrics/:id` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
+| GET | `/api/metrics/:id/entries` | — | `Entry[]` (por `date` desc, depois `id` desc) | `200` · `401` · `404 NOT_FOUND` |
+| POST | `/api/metrics/:id/entries` | body `CreateEntry` | `Entry` | `201` · `401` · `404 NOT_FOUND` · `422 VALIDATION` · `422 FUTURE_DATE` |
+| DELETE | `/api/metrics/:id/entries/:entryId` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
 
 ## Como mudar o contrato
 
