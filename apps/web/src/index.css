@@ -3,119 +3,201 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Theme tokens from the dashboard model. The theme is picked by the `data-dir`
+ * attribute on <html> ("a" = Teal Grimoire, the default; "b" = Violet System).
+ * Only these variables change between themes; everything else reads them.
+ */
+:root,
+[data-dir="a"] {
+  --bg: #0f1419;
+  --bgimg: radial-gradient(ellipse at 50% -10%, rgba(34, 211, 238, 0.09), transparent 60%);
+  --card: #1a222c;
+  --card2: #151c25;
+  --inset: #11181f;
+  --line: rgba(45, 212, 191, 0.16);
+  --line2: rgba(45, 212, 191, 0.42);
+  --acc: #2dd4bf;
+  --acc2: #22d3ee;
+  --ink: #03211d;
+  --glow: 0 0 14px rgba(45, 212, 191, 0.07);
+  --glow2: 0 0 16px rgba(34, 211, 238, 0.26);
+  --tglow: 0 0 8px rgba(45, 212, 191, 0.45);
+  --rglow: drop-shadow(0 0 5px rgba(45, 212, 191, 0.5));
+  --txt: #e6edf3;
+  --mut: #8f9ca9;
+  --dim: #56626e;
+  --r: 6px;
+  --title: "Pixelify Sans", monospace;
+  --ls: 0.03em;
+  --c1: #2dd4bf;
+  --c2: #a78bfa;
+  --c3: #fbbf24;
+  --hp: #fb7185;
+  --flame: #fbbf24;
+  --off: rgba(255, 255, 255, 0.07);
+  --qbg: linear-gradient(180deg, rgba(34, 211, 238, 0.08), rgba(15, 20, 25, 0.5));
+  --aura: rgba(45, 212, 191, 0.2);
+  --pgrid: rgba(45, 212, 191, 0.06);
+  --grid: rgba(143, 156, 169, 0.2);
+  --av-hair: #1b2738;
+  --av-coat: #1e2a37;
+  --av-coat2: #2f4255;
+  --pos: #4ade80;
+  --neg: #f87171;
+}
+
+[data-dir="b"] {
+  --bg: #0b0712;
+  --bgimg:
+    radial-gradient(ellipse at 50% -20%, rgba(168, 85, 247, 0.2), transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(192, 132, 252, 0.07), transparent 50%);
+  --card: #160f22;
+  --card2: #120b1d;
+  --inset: #0e0818;
+  --line: rgba(192, 132, 252, 0.3);
+  --line2: rgba(192, 132, 252, 0.7);
+  --acc: #c084fc;
+  --acc2: #a855f7;
+  --ink: #1a0631;
+  --glow: 0 0 22px rgba(168, 85, 247, 0.16);
+  --glow2: 0 0 24px rgba(168, 85, 247, 0.55), inset 0 0 18px rgba(168, 85, 247, 0.14);
+  --tglow: 0 0 10px rgba(192, 132, 252, 0.85);
+  --rglow: drop-shadow(0 0 8px rgba(192, 132, 252, 0.85));
+  --txt: #f2ecfb;
+  --mut: #a898be;
+  --dim: #695b7e;
+  --r: 2px;
+  --title: "Silkscreen", monospace;
+  --ls: 0.06em;
+  --c1: #c084fc;
+  --c2: #f472b6;
+  --c3: #67e8f9;
+  --hp: #fb7185;
+  --flame: #e879f9;
+  --off: rgba(192, 132, 252, 0.09);
+  --qbg: linear-gradient(180deg, rgba(168, 85, 247, 0.16), rgba(11, 7, 18, 0.7));
+  --aura: rgba(168, 85, 247, 0.38);
+  --pgrid: rgba(192, 132, 252, 0.07);
+  --grid: rgba(192, 132, 252, 0.22);
+  --av-hair: #1c1030;
+  --av-coat: #22143b;
+  --av-coat2: #38245c;
+}
+
+/*
+ * shadcn variables mapped onto the model tokens, so components/ui inherit the
+ * theme. Repeated on every [data-dir] so a nested theme scope resolves too.
+ */
+:root,
+[data-dir] {
+  --radius: var(--r);
+  --background: var(--bg);
+  --foreground: var(--txt);
+  --card-foreground: var(--txt);
+  --popover: var(--card2);
+  --popover-foreground: var(--txt);
+  --primary: var(--acc);
+  --primary-foreground: var(--ink);
+  --secondary: var(--inset);
+  --secondary-foreground: var(--txt);
+  --muted: var(--inset);
+  --muted-foreground: var(--mut);
+  --accent: var(--inset);
+  --accent-foreground: var(--acc);
+  --destructive: var(--hp);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--acc);
+  --chart-1: var(--c1);
+  --chart-2: var(--c2);
+  --chart-3: var(--c3);
+  --chart-4: var(--acc2);
+  --chart-5: var(--hp);
+  --sidebar: var(--card2);
+  --sidebar-foreground: var(--txt);
+  --sidebar-border: var(--line);
+}
+
 @theme inline {
+  /* shadcn */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+
+  /* model tokens as utilities: bg-card2, text-acc, border-line2, shadow-glow... */
+  --color-bg: var(--bg);
+  --color-card2: var(--card2);
+  --color-inset: var(--inset);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-acc: var(--acc);
+  --color-acc2: var(--acc2);
+  --color-ink: var(--ink);
+  --color-txt: var(--txt);
+  --color-mut: var(--mut);
+  --color-dim: var(--dim);
+  --color-off: var(--off);
+  --color-flame: var(--flame);
+  --color-hp: var(--hp);
+  --color-c1: var(--c1);
+  --color-c2: var(--c2);
+  --color-c3: var(--c3);
+  --color-pos: var(--pos);
+  --color-neg: var(--neg);
+  --color-aura: var(--aura);
+  --color-grid: var(--grid);
+  --color-pgrid: var(--pgrid);
+
+  --shadow-glow: var(--glow);
+  --shadow-glow2: var(--glow2);
+  --text-shadow-tglow: var(--tglow);
+  --tracking-ls: var(--ls);
+
+  /* The model uses a single corner radius; every rounded-* step follows it. */
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-title: var(--title);
 }
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+/* `filter: var(--rglow)` and `background-image: var(--qbg)` from the model. */
+@utility rglow {
+  filter: var(--rglow);
 }
 
-.dark {
-  /* azul-quase-preto com acento ciano — inspirado no painel de referência */
-  --background: oklch(0.17 0.02 255);
-  --foreground: oklch(0.95 0.01 250);
-  --card: oklch(0.21 0.025 255);
-  --card-foreground: oklch(0.95 0.01 250);
-  --popover: oklch(0.21 0.025 255);
-  --popover-foreground: oklch(0.95 0.01 250);
-  --primary: oklch(0.78 0.12 195);
-  --primary-foreground: oklch(0.2 0.03 255);
-  --secondary: oklch(0.26 0.02 255);
-  --secondary-foreground: oklch(0.95 0.01 250);
-  --muted: oklch(0.26 0.02 255);
-  --muted-foreground: oklch(0.68 0.02 250);
-  --accent: oklch(0.28 0.03 255);
-  --accent-foreground: oklch(0.95 0.01 250);
-  --destructive: oklch(0.62 0.2 22);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.78 0.12 195);
-  --chart-1: oklch(0.78 0.12 195);
-  --chart-2: oklch(0.7 0.15 300);
-  --chart-3: oklch(0.75 0.15 160);
-  --chart-4: oklch(0.75 0.16 70);
-  --chart-5: oklch(0.68 0.2 20);
-  --sidebar: oklch(0.19 0.022 255);
-  --sidebar-foreground: oklch(0.95 0.01 250);
-  --sidebar-primary: oklch(0.78 0.12 195);
-  --sidebar-primary-foreground: oklch(0.2 0.03 255);
-  --sidebar-accent: oklch(0.28 0.03 255);
-  --sidebar-accent-foreground: oklch(0.95 0.01 250);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.78 0.12 195);
+@utility bg-qbg {
+  background-image: var(--qbg);
 }
 
 @layer base {
-  :root {
-    @apply font-sans;
-  }
-
   * {
     @apply border-border outline-ring/50;
   }
@@ -123,11 +205,28 @@
   html,
   body,
   #root {
-    @apply h-full;
+    @apply min-h-dvh;
   }
 
   body {
-    @apply m-0 min-w-[320px] bg-background text-foreground antialiased;
+    @apply m-0 min-w-[320px] font-sans text-txt antialiased;
+    background-color: var(--bg);
+    background-image: var(--bgimg);
+    background-attachment: fixed;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  a {
+    color: var(--acc);
+  }
+
+  a:hover {
+    color: var(--acc2);
+  }
+
+  input::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
   }
 }
 
