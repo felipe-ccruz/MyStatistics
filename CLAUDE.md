@@ -68,7 +68,7 @@ MyStatistics/
 - **Contrato com body de request (POST/PUT/PATCH): schema TypeBox, obrigatório.** Defina o schema em `shared` e derive o tipo dele:
   ```ts
   // packages/shared/src/metric.ts
-  import { t } from "elysia"; // TypeBox; casa 1:1 com a validação do Elysia
+  import { Type as t } from "@sinclair/typebox"; // TypeBox puro: o Elysia valida igual, e o front não carrega o Elysia
   export const CreateMetric = t.Object({
     name: t.String({ minLength: 1 }),
     unit: t.String(),
