@@ -1,6 +1,7 @@
 /**
  * Erro de aplicação com HTTP status e código de negócio. O handler global o formata no
- * shape único `ApiError`. Use as subclasses (`NotFoundError`, `UnprocessableEntityError`);
+ * shape único `ApiError`. Use as subclasses (`UnauthorizedError`, `NotFoundError`, `ConflictError`,
+ * `UnprocessableEntityError`);
  * crie uma nova aqui quando aparecer outro status.
  */
 export class HttpError extends Error {
