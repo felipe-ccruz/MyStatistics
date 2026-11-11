@@ -188,12 +188,38 @@
   --font-title: var(--title);
 }
 
-/* `filter: var(--rglow)` and `background-image: var(--qbg)` from the model. */
+/* Toast from the model: drops in, stays, fades out going up (Sonner handles placement). */
+@theme {
+  --animate-toast-in: toastIn 2.9s ease forwards;
+
+  @keyframes toastIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    8% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    86% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+}
+
+/*
+ * `filter: var(--rglow)` and `background-image: var(--qbg)` from the model.
+ * Not named bg-*: tailwind-merge would treat it as a background color and drop bg-card2.
+ */
 @utility rglow {
   filter: var(--rglow);
 }
 
-@utility bg-qbg {
+@utility qbg {
   background-image: var(--qbg);
 }
 
