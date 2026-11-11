@@ -17,4 +17,6 @@ export type Activity = {
   category: ActivityCategory;
   durationMinutes: number;
   date: string;
+  /** Matéria de uma atividade `study`; `null` quando não informada (e sempre em `exercise`). */
+  subject: string | null;
 };

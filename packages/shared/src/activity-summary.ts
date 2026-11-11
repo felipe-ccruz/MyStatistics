@@ -34,9 +34,14 @@ export type ActivitySummary = {
   trend: {
     /** Total do período anterior de mesmo tamanho. */
     previousTotalMinutes: number;
-    /** Variação % do total vs. o período anterior; `null` quando o anterior tem 0 minutos. */
+    /** Variação % do total vs. o período anterior, com fração (o front arredonda); `null` quando o anterior tem 0 minutos. */
     changePercent: number | null;
   };
   /** Todos os dias do período, do mais antigo até hoje, com 0 nos dias sem atividade. */
   perDay: { date: string; minutes: Record<ActivityCategory, number> }[];
+  /**
+   * Minutos de `study` do período por matéria, do maior para o menor (empate: por nome).
+   * Atividades `study` sem matéria entram em `"Other"`. Vazio quando não há study no período.
+   */
+  studyBySubject: { subject: string; minutes: number }[];
 };

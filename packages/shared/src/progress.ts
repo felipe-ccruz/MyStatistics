@@ -91,7 +91,7 @@ export type Progress = {
     focus: number;
     /** % dos dias com as duas categorias. */
     discipline: number;
-    /** Os números por trás dos atributos, para a descrição curta de cada um. */
+    /** Os números por trás dos atributos, para a descrição curta de cada um. Vêm com fração: o front formata. */
     details: {
       studyMinutesPerDay: number;
       exerciseMinutesPerDay: number;

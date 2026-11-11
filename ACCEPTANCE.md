@@ -44,7 +44,7 @@ Vocabulário fixo. Código, rotas e UI usam **estes** nomes — sem sinônimos s
 | **Visitante** | Quem abre um portfólio sem ser o dono, logado ou não. Só lê, nunca edita. |
 | **Métrica** (`metric`) | A *definição* do que é medido: nome, unidade, tipo de valor. Ex.: "Peso (kg)". |
 | **Registro** (`entry`) | Um *lançamento* de uma métrica: valor + data. Ex.: "Peso = 78.4 em 2026-07-12". |
-| **Sessão de estudo** (`study session`) | Um bloco de estudo: matéria/tópico, duração, data. |
+| **Sessão de estudo** (`study session`) | Um bloco de estudo: matéria/tópico, duração, data. No sistema é uma **atividade `study` com `subject`** (a matéria) — não existe entidade própria. |
 | **Atividade** (`activity`) | Um lançamento de tempo gasto numa categoria (`study` ou `exercise`), num dia. `exercise` cobre qualquer exercício físico: academia, corrida, bike etc. Ex.: "Study = 90 min em 2026-08-21". |
 | **Período** | Recorte de tempo usado nas análises (7d, 30d, mês, ano, customizado). |
 | **Resumo** (`summary`) | Estatísticas calculadas sobre um conjunto de registros num período. |

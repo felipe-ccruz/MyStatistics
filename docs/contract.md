@@ -22,7 +22,7 @@ Divergência entre este arquivo e o código do server é bug: avise o manager.
 - **Request com body (POST/PUT/PATCH):** schema TypeBox em `shared`, obrigatório. O server valida com `{ body: Schema }`; o front tipa com o tipo de mesmo nome (`typeof Schema.static`).
 - **Response:** tipo em `shared`; o handler anota o retorno (ex.: `Promise<Activity>`).
 - **Datas:** dia de calendário `"YYYY-MM-DD"` — sem hora, sem fuso (ACCEPTANCE §6).
-- **IDs:** inteiros; no path, validados com `t.Numeric()`.
+- **IDs:** inteiros positivos dentro do limite do `integer` do Postgres (1 a 2147483647); no path, id fracionário, negativo ou fora do limite → `422 VALIDATION`, nunca `500`.
 - **Sucesso sem corpo:** `204`.
 
 ## Autenticação
@@ -50,7 +50,8 @@ Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/s
 | `NOT_FOUND` | 404 | rota inexistente, recurso com id inexistente, ou recurso de outro usuário |
 | `PROFILE_NOT_FOUND` | 404 | portfólio com slug inexistente **ou** perfil privado (mesma resposta nos dois casos) |
 | `METRIC_NAME_TAKEN` | 409 | métrica com nome que o usuário já usa (sem diferenciar maiúsculas) |
-| `FUTURE_DATE` | 422 | registro de métrica com data depois de hoje |
+| `FUTURE_DATE` | 422 | atividade ou registro de métrica com data depois de hoje |
+| `SUBJECT_NOT_ALLOWED` | 422 | atividade com `subject` (matéria) numa categoria que não é `study` |
 | `INVALID_DURATION` | 422 | atividade com duração zero, ou `hours`/`minutes` sem o par no PATCH |
 | `EMPTY_UPDATE` | 422 | PATCH sem nenhum campo a mudar |
 | `INTERNAL` | 500 | qualquer outra falha |
@@ -86,16 +87,16 @@ Tipos em [auth.ts](../packages/shared/src/auth.ts) e schemas em [auth-schema.ts]
 
 ### Atividades — [apps/server/src/activities/infra/activity.controller.ts](../apps/server/src/activities/infra/activity.controller.ts)
 
-Tipos em [activity.ts](../packages/shared/src/activity.ts) e schemas em [activity-schema.ts](../packages/shared/src/activity-schema.ts). As regras de negócio (duração = `hours*60 + minutes` > 0, `date` omitida = hoje, `hours`/`minutes` juntos no PATCH) estão nos comentários do schema e na ACCEPTANCE §5.6.
+Tipos em [activity.ts](../packages/shared/src/activity.ts) e schemas em [activity-schema.ts](../packages/shared/src/activity-schema.ts). As regras de negócio (duração = `hours*60 + minutes` > 0, `date` omitida = hoje e nunca no futuro, `hours`/`minutes` juntos no PATCH, `subject` só em `study`) estão nos comentários do schema e na ACCEPTANCE §5.6.
 
 **Todas exigem sessão** (`401 UNAUTHORIZED` sem cookie) e só enxergam as atividades do usuário logado: id de atividade de outro usuário responde `404 NOT_FOUND`, como se não existisse.
 
 | Método | Rota | Request | Response | Status |
 | --- | --- | --- | --- | --- |
-| POST | `/api/activities` | body `CreateActivity` | `Activity` | `201` · `401` · `422 VALIDATION` · `422 INVALID_DURATION` |
+| POST | `/api/activities` | body `CreateActivity` | `Activity` | `201` · `401` · `422 VALIDATION` (inclusive dia que não existe) · `422 INVALID_DURATION` · `422 FUTURE_DATE` · `422 SUBJECT_NOT_ALLOWED` |
 | GET | `/api/activities` | — | `Activity[]` do usuário (por `date` desc, depois `id` desc) | `200` · `401` |
 | GET | `/api/activities/:id` | — | `Activity` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` (id não numérico) |
-| PATCH | `/api/activities/:id` | body `UpdateActivity` | `Activity` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` · `422 INVALID_DURATION` · `422 EMPTY_UPDATE` |
+| PATCH | `/api/activities/:id` | body `UpdateActivity` | `Activity` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` · `422 INVALID_DURATION` · `422 EMPTY_UPDATE` · `422 FUTURE_DATE` · `422 SUBJECT_NOT_ALLOWED` |
 | DELETE | `/api/activities/:id` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
 | GET | `/api/activities/summary?period=7d\|30d` | query `ActivitySummaryQuery` | `ActivitySummary` | `200` · `401` · `422 VALIDATION` (período fora da lista) |
 
