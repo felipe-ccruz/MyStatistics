@@ -333,7 +333,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** Fase 2, D5, D6.
 
-- [ ] **T6.1 — Contratos de progresso e resumo**
+- [x] **T6.1 — Contratos de progresso e resumo** — feito em 2026-11-11 (contrato adiantado pelo manager)
   - `packages/shared/src/progress.ts`: `Progress` = `{ level; xpCurrent; xpNeeded; xpTotal; rank: "E"|"D"|"C"|"B"|"A"|"S"; className; streak: { current; best; week: { date: string; active: boolean }[] }; status: { mp; sta; mood }; attributes: { int; str; focus; discipline }; dailyQuest: { goals: { category: ActivityCategory; targetMinutes; doneMinutes; reward; completed }[]; bonus; allCompleted } }` (os campos sem tipo são `number`).
   - `packages/shared/src/activity-summary.ts`: `SUMMARY_PERIODS = ["7d", "30d"] as const`; `ActivitySummaryQuery = t.Object({ period: t.Union(...) })`; `ActivitySummary` = `{ period; totalMinutes; averagePerDay; activeDays; bestDay: { date; totalMinutes } | null; trend: { previousTotalMinutes; changePercent: number | null }; perDay: { date; minutes: Record<ActivityCategory, number> }[] }` (`changePercent` é `null` quando o período anterior tem 0 minutos).
   - `docs/contract.md`: `GET /api/progress` e `GET /api/activities/summary?period=7d|30d`.
@@ -405,7 +405,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** Fase 4, D8.
 
-- [ ] **T9.1 — Contratos**
+- [x] **T9.1 — Contratos** — feito em 2026-11-11 (contrato adiantado pelo manager)
   - `packages/shared/src/metric.ts` + `metric-schema.ts`: `CreateMetric` = `{ name: t.String({ minLength: 1, maxLength: 60 }), unit: t.String({ maxLength: 20 }) }`; `Metric` = `{ id; name; unit }`. `CreateEntry` = `{ value: t.Number(), date: t.Optional(t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })) }`; `Entry` = `{ id; metricId; value; date }`.
   - Erros novos: `METRIC_NAME_TAKEN` (409), `FUTURE_DATE` (422). Classe `ConflictError` (409) em `shared/infra/errors` se ainda não existir.
   - Rotas: `GET/POST /api/metrics`, `DELETE /api/metrics/:id`, `GET/POST /api/metrics/:id/entries`, `DELETE /api/metrics/:id/entries/:entryId`.
@@ -444,7 +444,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** Fases 7, 8 e 10, D9.
 
-- [ ] **T11.1 — Contratos**
+- [x] **T11.1 — Contratos** — feito em 2026-11-11 (contrato adiantado pelo manager)
   - `UpdateProfile` = `{ visibility }`. `PROFILE_ITEM_KINDS = ["progress", "activity_category", "metric"] as const`. `ProfileItem` = `{ kind; ref: string; label: string; visible: boolean }` (`ref`: `""` para progress, a categoria, ou o id da métrica). `UpdateProfileItem` = `{ kind, ref, visible }`.
   - `PublicProfile` = `{ slug; progress?: Progress; activities?: { category: ActivityCategory; summary7d: ActivitySummary; summary30d: ActivitySummary }[]; metrics?: { name: string; unit: string; summary30d: MetricSummary }[] }`. Item oculto **não aparece** no JSON.
   - Rotas: `PATCH /api/profile` (dono), `GET /api/profile/items` e `PATCH /api/profile/items` (dono), `GET /api/public/profiles/:slug` (sem login). Erro novo: `PROFILE_NOT_FOUND` (404).
