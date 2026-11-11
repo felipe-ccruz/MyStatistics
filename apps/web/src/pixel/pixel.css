@@ -1,0 +1,63 @@
+/*
+ * Pixel art animations. All of them use steps(1): the frame jumps instead of
+ * sliding, like an old game. Looping ones stop under prefers-reduced-motion.
+ * Inside an SVG, 1px in a transform is one sprite pixel (viewBox units).
+ */
+
+@keyframes avBob {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes avBlink {
+  0% {
+    opacity: 0;
+  }
+  92% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 0;
+  }
+}
+
+@keyframes flick {
+  0% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.06, 0.94) translateY(1px);
+  }
+}
+
+/* Avatar head breathing (the blink layer is nested inside it). */
+.px-av-head {
+  animation: avBob 1.6s steps(1) infinite;
+}
+
+/* Eyelids: hidden except between 92% and 97% of the cycle. */
+.px-av-blink {
+  opacity: 0;
+  animation: avBlink 4.2s steps(1) infinite;
+}
+
+/* Streak flame wrapper: wobbles from its base, glowing in --flame. */
+.px-flame {
+  display: inline-flex;
+  color: var(--flame);
+  filter: drop-shadow(0 0 6px var(--flame));
+  transform-origin: 50% 100%;
+  animation: flick 0.9s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .px-av-head,
+  .px-av-blink,
+  .px-flame {
+    animation: none;
+  }
+}
