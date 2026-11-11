@@ -34,6 +34,9 @@ export const auth = betterAuth({
     updateAge: ONE_DAY_IN_SECONDS,
   },
   // O navegador chega pelo proxy do Vite, então a origem é a do front.
+  // Atenção: a lib só consulta `trustedOrigins` (e o rate limit) quando recebe o `request` / roda o
+  // próprio handler HTTP. Como chamamos `auth.api.*` só com `headers`, hoje isto NÃO protege nada.
+  // A defesa contra CSRF é o server aceitar só corpo JSON (shared/infra/json-body.ts) + SameSite=Lax.
   trustedOrigins: [env.BETTER_AUTH_URL],
   advanced: {
     useSecureCookies: env.isProduction,
