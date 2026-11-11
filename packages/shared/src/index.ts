@@ -17,3 +17,6 @@ export type { Activity, ActivityCategory } from "./activity";
 export { ACTIVITY_CATEGORIES } from "./activity";
 export { CreateActivity, UpdateActivity } from "./activity-schema";
 export type { ApiError } from "./error";
+export { PROFILE_VISIBILITIES, SLUG_PATTERN } from "./auth";
+export type { Me, ProfileVisibility } from "./auth";
+export { SignIn, SignUp } from "./auth-schema";

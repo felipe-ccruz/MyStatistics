@@ -27,22 +27,27 @@ Divergência entre este arquivo e o código do server é bug: avise o manager.
 
 ## Autenticação
 
-**Nenhuma, hoje.** Todas as rotas são públicas e não existe usuário no banco. Contas estão planejadas na ACCEPTANCE §5.1.1, com método e mecanismo ainda em aberto (§7). O que o ACCEPTANCE já fixa para quando entrar:
+E-mail + senha com **Better Auth** no server ([apps/server/src/auth](../apps/server/src/auth/)). A lib cuida do hash da senha, das sessões e do cookie; ela é chamada por `auth.api.*` **dentro do nosso controller**. O handler HTTP do Better Auth não é montado, então todas as rotas `/api/auth/*` são as nossas (tabela abaixo), com schema TypeBox no `shared` e erro no shape único `ApiError`.
 
-- rota de dados sem sessão → `401` com `code: "UNAUTHORIZED"`;
-- recurso de outro usuário → `404 NOT_FOUND`, nunca `403`.
-
-Os detalhes entram aqui no `feat:` de contas.
+- **Sessão:** cookie definido pelo Better Auth (httpOnly, `SameSite=Lax`, `Secure` em produção, validade de 30 dias). O front não lê nem escreve o cookie: as chamadas vão por `/api/...` relativo (mesma origem) e o navegador o envia sozinho.
+- **Quem está logado:** `GET /api/auth/me` devolve `Me` ([auth.ts](../packages/shared/src/auth.ts)), ou `401 UNAUTHORIZED` sem sessão.
+- **Rotas de dados exigem sessão:** sem cookie válido → `401` com `code: "UNAUTHORIZED"`.
+- **Isolamento:** recurso de outro usuário → `404 NOT_FOUND`, nunca `403` (ACCEPTANCE §4).
+- **Ids:** o id de usuário é `string` (gerado pelo Better Auth). Os demais ids continuam inteiros.
 
 ## Erros
 
-Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/src/error.ts). O server produz lançando as classes de [apps/server/src/shared/infra/errors](../apps/server/src/shared/infra/errors/) (todas estendem `HttpError`), formatadas pelo `errorHandler` global. `message` é texto em pt-BR pronto pra exibir; `code` identifica a falha.
+Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/src/error.ts). O server produz lançando as classes de [apps/server/src/shared/infra/errors](../apps/server/src/shared/infra/errors/) (todas estendem `HttpError`), formatadas pelo `errorHandler` global. `message` é texto em **inglês** pronto pra exibir na UI; `code` identifica a falha (é por ele que o front decide onde mostrar o erro).
 
 | `code` | Status | Quando |
 | --- | --- | --- |
 | `VALIDATION` | 422 | body ou params não batem com o schema TypeBox |
 | `PARSE` | 400 | corpo da requisição não é JSON válido (qualquer rota com body) |
-| `NOT_FOUND` | 404 | rota inexistente, ou recurso com id inexistente |
+| `UNAUTHORIZED` | 401 | rota que exige sessão chamada sem cookie de sessão válido |
+| `INVALID_CREDENTIALS` | 401 | login com e-mail inexistente ou senha errada (mesma resposta nos dois casos) |
+| `EMAIL_TAKEN` | 409 | cadastro com e-mail que já tem conta |
+| `SLUG_TAKEN` | 409 | cadastro com `slug` que já é de outro perfil |
+| `NOT_FOUND` | 404 | rota inexistente, recurso com id inexistente, ou recurso de outro usuário |
 | `INVALID_DURATION` | 422 | atividade com duração zero, ou `hours`/`minutes` sem o par no PATCH |
 | `EMPTY_UPDATE` | 422 | PATCH sem nenhum campo a mudar |
 | `INTERNAL` | 500 | qualquer outra falha |
@@ -65,17 +70,30 @@ Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/s
 | PUT | `/api/hello` | — | `HelloResponse` | `200` |
 | GET | `/api/hello/:name` | — | `HelloResponse` | `200` |
 
+### Autenticação — [apps/server/src/auth/infra/auth.controller.ts](../apps/server/src/auth/infra/auth.controller.ts)
+
+Tipos em [auth.ts](../packages/shared/src/auth.ts) e schemas em [auth-schema.ts](../packages/shared/src/auth-schema.ts).
+
+| Método | Rota | Request | Response | Status |
+| --- | --- | --- | --- | --- |
+| POST | `/api/auth/signup` | body `SignUp` | `Me` + `Set-Cookie` (já entra logado, perfil `private`) | `201` · `422 VALIDATION` · `409 EMAIL_TAKEN` · `409 SLUG_TAKEN` |
+| POST | `/api/auth/login` | body `SignIn` | `Me` + `Set-Cookie` | `200` · `422 VALIDATION` · `401 INVALID_CREDENTIALS` |
+| POST | `/api/auth/logout` | — | sem corpo; limpa o cookie | `204` (também sem sessão) |
+| GET | `/api/auth/me` | — | `Me` | `200` · `401 UNAUTHORIZED` |
+
 ### Atividades — [apps/server/src/activities/infra/activity.controller.ts](../apps/server/src/activities/infra/activity.controller.ts)
 
 Tipos em [activity.ts](../packages/shared/src/activity.ts) e schemas em [activity-schema.ts](../packages/shared/src/activity-schema.ts). As regras de negócio (duração = `hours*60 + minutes` > 0, `date` omitida = hoje, `hours`/`minutes` juntos no PATCH) estão nos comentários do schema e na ACCEPTANCE §5.6.
 
+**Todas exigem sessão** (`401 UNAUTHORIZED` sem cookie) e só enxergam as atividades do usuário logado: id de atividade de outro usuário responde `404 NOT_FOUND`, como se não existisse.
+
 | Método | Rota | Request | Response | Status |
 | --- | --- | --- | --- | --- |
-| POST | `/api/activities` | body `CreateActivity` | `Activity` | `201` · `422 VALIDATION` · `422 INVALID_DURATION` |
-| GET | `/api/activities` | — | `Activity[]` (por `date` desc, depois `id` desc) | `200` |
-| GET | `/api/activities/:id` | — | `Activity` | `200` · `404 NOT_FOUND` · `422 VALIDATION` (id não numérico) |
-| PATCH | `/api/activities/:id` | body `UpdateActivity` | `Activity` | `200` · `404 NOT_FOUND` · `422 VALIDATION` · `422 INVALID_DURATION` · `422 EMPTY_UPDATE` |
-| DELETE | `/api/activities/:id` | — | sem corpo | `204` · `404 NOT_FOUND` |
+| POST | `/api/activities` | body `CreateActivity` | `Activity` | `201` · `401` · `422 VALIDATION` · `422 INVALID_DURATION` |
+| GET | `/api/activities` | — | `Activity[]` do usuário (por `date` desc, depois `id` desc) | `200` · `401` |
+| GET | `/api/activities/:id` | — | `Activity` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` (id não numérico) |
+| PATCH | `/api/activities/:id` | body `UpdateActivity` | `Activity` | `200` · `401` · `404 NOT_FOUND` · `422 VALIDATION` · `422 INVALID_DURATION` · `422 EMPTY_UPDATE` |
+| DELETE | `/api/activities/:id` | — | sem corpo | `204` · `401` · `404 NOT_FOUND` |
 
 ## Como mudar o contrato
 
