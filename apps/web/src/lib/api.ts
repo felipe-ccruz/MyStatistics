@@ -1,5 +1,8 @@
 import type { ApiError } from "@mystatistics/shared";
 
+/** API error code (docs/contract.md) for a call without a valid session. */
+export const UNAUTHORIZED_ERROR = "UNAUTHORIZED";
+
 /** Front-only error code: the request never got an answer from the API. */
 export const NETWORK_ERROR = "NETWORK";
 /** Front-only error code: the API answered with something that is not an `ApiError`. */
