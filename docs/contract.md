@@ -42,7 +42,7 @@ Shape único: `ApiError`, em [packages/shared/src/error.ts](../packages/shared/s
 | `code` | Status | Quando |
 | --- | --- | --- |
 | `VALIDATION` | 422 | body ou params não batem com o schema TypeBox |
-| `PARSE` | 400 | corpo da requisição não é JSON válido (qualquer rota com body) |
+| `PARSE` | 400 | corpo da requisição não é JSON válido, ou `Content-Type` diferente de `application/json` (qualquer rota com body). Recusar formulário `urlencoded`/`multipart` bloqueia CSRF por `<form>` de outro site. |
 | `UNAUTHORIZED` | 401 | rota que exige sessão chamada sem cookie de sessão válido |
 | `INVALID_CREDENTIALS` | 401 | login com e-mail inexistente ou senha errada (mesma resposta nos dois casos) |
 | `EMAIL_TAKEN` | 409 | cadastro com e-mail que já tem conta |
