@@ -1,5 +1,5 @@
-import { defineConfig } from "drizzle-kit";
 import { config } from "dotenv";
+import { defineConfig } from "drizzle-kit";
 
 // O .env fica na raiz do monorepo, não dentro de apps/server.
 config({ path: "../../.env" });

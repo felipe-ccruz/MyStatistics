@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
 import { IntegrationTestHelper } from "@/shared/utils/test-helpers/integration-test-helper";
-import { activitiesTable, type ActivityRow } from "../domain/activity.schema";
+import { type ActivityRow, activitiesTable } from "../domain/activity.schema";
 import { ActivityRepository } from "../infra/activity.repository";
 import { updateActivityUseCase } from "./update-activity.usecase";
 

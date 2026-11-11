@@ -1,5 +1,5 @@
-import { Elysia } from "elysia";
 import type { ApiError } from "@mystatistics/shared";
+import { Elysia } from "elysia";
 import { HttpError } from "./http-error";
 
 function body(message: string, code: string): ApiError {

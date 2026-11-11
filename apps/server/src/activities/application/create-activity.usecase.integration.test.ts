@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from "bun:test";
 import { IntegrationTestHelper } from "@/shared/utils/test-helpers/integration-test-helper";
-import { todayISO } from "../domain/activity-logic";
 import { activitiesTable } from "../domain/activity.schema";
+import { todayISO } from "../domain/activity-logic";
 import { ActivityRepository } from "../infra/activity.repository";
 import { createActivityUseCase } from "./create-activity.usecase";
 

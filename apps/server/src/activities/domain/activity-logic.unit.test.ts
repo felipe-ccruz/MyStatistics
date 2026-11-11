@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { toDurationMinutes, todayISO } from "./activity-logic";
 import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
+import { toDurationMinutes, todayISO } from "./activity-logic";
 
 describe("toDurationMinutes", () => {
   it("soma horas e minutos em minutos totais", () => {

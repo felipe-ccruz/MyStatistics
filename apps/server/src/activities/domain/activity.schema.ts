@@ -5,8 +5,8 @@
  * Ao adicionar/alterar uma tabela, rode `pnpm db:generate` e depois `pnpm db:migrate`.
  */
 
-import { date, integer, pgEnum, pgTable, serial } from "drizzle-orm/pg-core";
 import { ACTIVITY_CATEGORIES } from "@mystatistics/shared/activity";
+import { date, integer, pgEnum, pgTable, serial } from "drizzle-orm/pg-core";
 
 /** Enum de categoria no Postgres — mesma lista do contrato em `shared`. */
 export const activityCategory = pgEnum("activity_category", ACTIVITY_CATEGORIES);

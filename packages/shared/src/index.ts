@@ -13,7 +13,7 @@ export type HelloResponse = {
   method: string;
 };
 
-export { ACTIVITY_CATEGORIES } from "./activity";
 export type { Activity, ActivityCategory } from "./activity";
+export { ACTIVITY_CATEGORIES } from "./activity";
 export { CreateActivity, UpdateActivity } from "./activity-schema";
 export type { ApiError } from "./error";

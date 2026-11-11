@@ -7,13 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!apps/server/drizzle",
-      "!**/dist",
-      "!MyStatistics Dashboard.html",
-      "!**/*.md"
-    ]
+    "includes": ["**", "!apps/server/drizzle", "!**/dist", "!MyStatistics Dashboard.html", "!**/*.md"]
   },
   "formatter": {
     "enabled": true,

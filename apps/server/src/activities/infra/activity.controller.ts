@@ -22,7 +22,10 @@ export const ActivityController = createController({ prefix: "/activities", tags
     },
     {
       body: CreateActivity,
-      detail: { summary: "Create an activity", description: "Duration comes as hours + minutes; date defaults to today." },
+      detail: {
+        summary: "Create an activity",
+        description: "Duration comes as hours + minutes; date defaults to today.",
+      },
     },
   )
 

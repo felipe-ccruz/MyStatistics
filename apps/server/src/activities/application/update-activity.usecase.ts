@@ -2,10 +2,10 @@ import type { Activity, UpdateActivity } from "@mystatistics/shared";
 import { db } from "@/shared/infra/databases/postgres";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
 import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
-import { toDurationMinutes } from "../domain/activity-logic";
 import { toActivity } from "../domain/activity.mapper";
 import type { ActivityIdParams } from "../domain/activity.types";
-import { ActivityRepository, type ActivityChanges } from "../infra/activity.repository";
+import { toDurationMinutes } from "../domain/activity-logic";
+import { type ActivityChanges, ActivityRepository } from "../infra/activity.repository";
 
 type UpdateActivityInput = ActivityIdParams & UpdateActivity;
 

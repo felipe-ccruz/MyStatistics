@@ -1,6 +1,6 @@
-import { Elysia } from "elysia";
 import { openapi } from "@elysiajs/openapi";
 import type { HealthResponse, HelloResponse } from "@mystatistics/shared";
+import { Elysia } from "elysia";
 import { appRoutes } from "@/app.routes";
 import { pingDb } from "@/shared/infra/databases/postgres";
 import { env } from "@/shared/infra/env/env";

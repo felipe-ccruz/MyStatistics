@@ -1,6 +1,6 @@
 import type { Activity, CreateActivity } from "@mystatistics/shared";
-import { toDurationMinutes, todayISO } from "../domain/activity-logic";
 import { toActivity } from "../domain/activity.mapper";
+import { toDurationMinutes, todayISO } from "../domain/activity-logic";
 import { ActivityRepository } from "../infra/activity.repository";
 
 /** Cria a atividade: horas + minutos viram minutos totais (> 0) e `date` omitida vira hoje. */

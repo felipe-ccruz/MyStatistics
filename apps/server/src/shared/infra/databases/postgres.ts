@@ -1,5 +1,5 @@
-import { drizzle } from "drizzle-orm/postgres-js";
 import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { env } from "@/shared/infra/env/env";
 
