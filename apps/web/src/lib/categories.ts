@@ -1,4 +1,5 @@
-import { ACTIVITY_CATEGORIES, type ActivityCategory, XP_RATE } from "@mystatistics/shared";
+import { ACTIVITY_CATEGORIES, type ActivityCategory } from "@mystatistics/shared/activity";
+import { XP_RATE } from "@mystatistics/shared/progress";
 import type { IconName } from "@/pixel/sprites/icons";
 
 type CategoryMeta = {

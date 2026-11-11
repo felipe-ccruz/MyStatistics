@@ -6,7 +6,7 @@ import {
   RANKS,
   type Rank,
   xpToNextLevel,
-} from "@mystatistics/shared";
+} from "@mystatistics/shared/progress";
 import { Fragment, type ReactNode } from "react";
 import { PixelButton } from "@/components/game/pixel-button";
 import {
