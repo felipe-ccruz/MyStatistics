@@ -46,6 +46,10 @@ function parseJson(text: string): unknown {
   }
 }
 
+function invalidResponse(status: number) {
+  return new ApiRequestError(status, UNEXPECTED_RESPONSE_ERROR, "The server sent an invalid response.");
+}
+
 /** Statuses a bare (non-ApiError) answer gets when the dev proxy cannot reach the API. */
 const UNREACHABLE_STATUSES = new Set([500, 502, 503, 504]);
 
@@ -61,7 +65,8 @@ type ApiOptions = {
 /**
  * Calls the API through the relative `/api/...` path (the Vite proxy forwards it),
  * sending the session cookie. `T` must be a response contract from @mystatistics/shared.
- * Empty bodies (204) resolve to `undefined`: use `api<void>` for them.
+ * Only a 2xx with no body (204) resolves to `undefined`: use `api<void>` for it. A status
+ * from `acceptStatus` must carry a JSON body that is not an `ApiError`, or the call throws.
  */
 export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): Promise<T> {
   const { method = "GET", body, signal, acceptStatus = [] } = options;
@@ -81,13 +86,28 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
     throw new ApiRequestError(0, NETWORK_ERROR, NETWORK_MESSAGE);
   }
 
-  const text = await response.text().catch(() => "");
+  let text: string;
+  try {
+    text = await response.text();
+  } catch (error) {
+    // Aborted while the body was streaming: same as an abort before the response.
+    if (signal?.aborted) throw error;
+    throw new ApiRequestError(response.status, NETWORK_ERROR, NETWORK_MESSAGE);
+  }
   const data = text ? parseJson(text) : undefined;
 
-  if (response.ok || acceptStatus.includes(response.status)) {
-    if (text && data === undefined) {
-      throw new ApiRequestError(response.status, UNEXPECTED_RESPONSE_ERROR, "The server sent an invalid response.");
-    }
+  if (response.ok) {
+    // 2xx without a body (204) is the only case that resolves to `undefined`.
+    if (!text) return undefined as T;
+    if (data === undefined) throw invalidResponse(response.status);
+    return data as T;
+  }
+
+  if (acceptStatus.includes(response.status)) {
+    // An accepted error status must still carry the success contract: an empty body or an
+    // `ApiError` there is a failure, never `undefined as T`.
+    if (isApiError(data)) throw new ApiRequestError(response.status, data.error.code, data.error.message);
+    if (data === undefined) throw invalidResponse(response.status);
     return data as T;
   }
 
