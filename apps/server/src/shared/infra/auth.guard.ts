@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { toAuthHttpError } from "@/auth/domain/auth-errors";
+import { withAuthErrors } from "@/auth/domain/auth-errors";
 import { auth } from "@/auth/infra/better-auth";
 import { UnauthorizedError } from "./errors/unauthorized-error";
 
@@ -15,22 +15,13 @@ import { UnauthorizedError } from "./errors/unauthorized-error";
  * precisa valer em cada controller que o usa.
  */
 export const authGuard = new Elysia().resolve({ as: "scoped" }, async ({ request, set }) => {
-  let result: Awaited<ReturnType<typeof getSession>>;
-  try {
-    result = await getSession(request.headers);
-  } catch (error) {
-    throw toAuthHttpError(error) ?? error;
-  }
-
-  const session = result.response;
+  const { response: session, headers } = await withAuthErrors(() =>
+    auth.api.getSession({ headers: request.headers, returnHeaders: true }),
+  );
   if (!session) throw new UnauthorizedError();
 
-  const refreshedCookies = result.headers.getSetCookie();
+  const refreshedCookies = headers.getSetCookie();
   if (refreshedCookies.length > 0) set.headers["set-cookie"] = refreshedCookies;
 
   return { userId: session.user.id };
 });
-
-function getSession(headers: Headers) {
-  return auth.api.getSession({ headers, returnHeaders: true });
-}

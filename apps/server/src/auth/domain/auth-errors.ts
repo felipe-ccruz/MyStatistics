@@ -37,3 +37,12 @@ export function toAuthHttpError(error: unknown): HttpError | null {
 
   return null;
 }
+
+/** Roda uma chamada `auth.api.*` e relança a falha já traduzida por `toAuthHttpError`. */
+export async function withAuthErrors<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    throw toAuthHttpError(error) ?? error;
+  }
+}
