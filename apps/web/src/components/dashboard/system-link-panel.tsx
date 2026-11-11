@@ -9,7 +9,13 @@ const TITLE = "System link";
 export function SystemLinkPanel() {
   const health = useHealth();
 
-  if (health.isPending) return <LoadingState title={TITLE} rows={2} label="Checking the API…" />;
+  if (health.isPending) {
+    return (
+      <Panel title={TITLE}>
+        <LoadingState rows={2} label="Checking the API…" />
+      </Panel>
+    );
+  }
 
   if (health.isError) {
     return (
