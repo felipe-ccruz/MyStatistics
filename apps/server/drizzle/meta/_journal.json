@@ -29,6 +29,13 @@
       "when": 1794372863944,
       "tag": "0003_striped_zarda",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794375534224,
+      "tag": "0004_mixed_baron_zemo",
+      "breakpoints": true
     }
   ]
 }
