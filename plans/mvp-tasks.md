@@ -148,20 +148,20 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** D1, D10, D12. *(Tasks abaixo seguem D1 = Better Auth envolvido no nosso controller.)*
 
-- [ ] **T1.1 — Mensagens de erro da API em inglês** *(D10 = inglês)*
+- [x] **T1.1 — Mensagens de erro da API em inglês** *(D10 = inglês)* — feito em 2026-11-11
   - Traduza as mensagens em `apps/server/src/shared/infra/errors/global-error-handler.ts` e em `apps/server/src/activities/**` (os testes conferem `status`/`apiCode`, não o texto).
   - Atualize a frase "`message` é texto em pt-BR" do `docs/contract.md`.
   - **Pronto quando:** `git grep -n -E "inválid|encontrad|duração|Informe|Nada para" apps/server/src` não acha nada; testes do server passam.
   - Commit: `refactor: return api error messages in english`
 
-- [ ] **T1.2 — Contrato de conta em `packages/shared`** *(manager, antes dos agentes)*
+- [x] **T1.2 — Contrato de conta em `packages/shared`** *(manager, antes dos agentes)* — feito em 2026-11-11
   - `packages/shared/src/auth.ts` (puro): `PROFILE_VISIBILITIES = ["private", "public"] as const`, `ProfileVisibility`, `SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$"` e `Me` = `{ user: { id: string; email: string }; profile: { slug: string; visibility: ProfileVisibility } }`.
   - `packages/shared/src/auth-schema.ts` (TypeBox): `SignUp` = `{ email: t.String({ format: "email", maxLength: 254 }), password: t.String({ minLength: 8, maxLength: 128 }), slug: t.String({ pattern: SLUG_PATTERN }) }` e `SignIn` = `{ email, password }`. São os mesmos schemas que o server valida e que os formulários do front usam (T4.2).
   - `docs/contract.md`: seção "Autenticação" real: sessão em cookie gerenciado pelo Better Auth (httpOnly, SameSite=Lax, `Secure` em produção); rotas `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`; códigos `UNAUTHORIZED` (401), `INVALID_CREDENTIALS` (401), `EMAIL_TAKEN` (409), `SLUG_TAKEN` (409). Todas no `ApiError`.
   - **Pronto quando:** `pnpm typecheck` passa.
   - Commit: `feat: add auth contracts to shared`
 
-- [ ] **T1.3 — Instalar e configurar o Better Auth; tabelas**
+- [x] **T1.3 — Instalar e configurar o Better Auth; tabelas** — feito em 2026-11-11
   - `pnpm --filter @mystatistics/server add better-auth`. Confira na documentação oficial da versão instalada a configuração atual (adapter do Drizzle, `auth.api.*`, `returnHeaders`, nomes de tabela).
   - Variáveis novas no `.env` da raiz, no `.env.example`, no `.env.test` e validadas em `env.ts`: `BETTER_AUTH_SECRET` (mín. 32 caracteres; no `.env.test`, um valor fixo de teste) e `BETTER_AUTH_URL` (`http://localhost:5173` em dev, a origem que o navegador usa, por causa do proxy).
   - Módulo novo `apps/server/src/auth/`. Instância em `auth/infra/better-auth.ts`: `drizzleAdapter(db, { provider: "pg", schema })`, `emailAndPassword: { enabled: true, minPasswordLength: 8, maxPasswordLength: 128 }`, sessão de 30 dias, `trustedOrigins` com a origem do front. Tabelas no plural (`users`, `sessions`, `accounts`, `verifications`). O handler HTTP da lib **não** é montado: o server só chama `auth.api.*`.
@@ -170,14 +170,14 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
   - **Pronto quando:** a migração aplica no banco de dev; `pnpm --filter @mystatistics/server test` passa.
   - Commits: `chore: add better auth to server` → `feat: add auth and profile tables`
 
-- [ ] **T1.4 — Erros e guarda de autenticação**
+- [x] **T1.4 — Erros e guarda de autenticação** — feito em 2026-11-11
   - `shared/infra/errors/`: `UnauthorizedError` (401, código padrão `UNAUTHORIZED`, aceita outro, ex. `INVALID_CREDENTIALS`) e `ConflictError` (409, código obrigatório).
   - `shared/infra/auth.guard.ts`: plugin Elysia que chama `auth.api.getSession({ headers })` e expõe `userId` no contexto; sem sessão válida → `UnauthorizedError`. Controllers de dados fazem `.use(authGuard)`.
   - Regra pura com `*.unit.test.ts` onde houver (ex.: tradução dos erros do Better Auth para os nossos códigos).
   - **Pronto quando:** testes unitários novos passam; `pnpm typecheck` passa.
   - Commit: `feat: add auth guard and error classes`
 
-- [ ] **T1.5 — Use cases e rotas de autenticação**
+- [x] **T1.5 — Use cases e rotas de autenticação** — feito em 2026-11-11
   - `auth/application/`, um use case por arquivo, cada um com `*.usecase.integration.test.ts`:
     - `sign-up.usecase.ts`: confere o slug (409 `SLUG_TAKEN`), cria o usuário com `auth.api.signUpEmail` (`name` = slug) pegando os headers de `Set-Cookie`; e-mail já usado → 409 `EMAIL_TAKEN`; cria o perfil `private`. Se o perfil falhar por corrida no índice único (23505), apaga o usuário recém-criado e responde 409 `SLUG_TAKEN` (nunca fica usuário sem perfil). Devolve `Me` + headers.
     - `sign-in.usecase.ts`: `auth.api.signInEmail`; e-mail inexistente e senha errada → **o mesmo** 401 `INVALID_CREDENTIALS`, mesma mensagem.
@@ -191,6 +191,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
   - O `IntegrationTestHelper` ganha `createTestUser()` (usuário + perfil + cookie de sessão) para as próximas fases; os `truncate` incluem as tabelas novas.
   - **Pronto quando:** testes passam; com `pnpm dev:server`, via `curl -c/-b`: signup → me (200) → logout → me (401); e-mail repetido → 409 `EMAIL_TAKEN`; slug repetido → 409 `SLUG_TAKEN`; senha errada → 401 `INVALID_CREDENTIALS`. Depois, apague do banco de dev só os usuários criados no teste.
   - Commit: `feat: add sign up, login, logout and me endpoints`
+  - *Nota da revisão (2026-11-11):* chamando só `auth.api.*` com `headers`, o origin check, o CSRF e o rate limit do Better Auth não rodam. Toda rota com body passou a exigir `application/json` (senão `400 PARSE`), o que bloqueia CSRF por `<form>`. Falta rate limit no login e no cadastro **antes de qualquer deploy** (ACCEPTANCE §6).
 
 
 ---
@@ -199,14 +200,14 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
 
 **Depende de:** Fase 1, D4.
 
-- [ ] **T2.1 — `user_id` nas atividades**
+- [x] **T2.1 — `user_id` nas atividades** — feito em 2026-11-11
   - `activity.schema.ts`: `userId text not null references users(id) on delete cascade` + índice `(user_id, date)`.
   - `pnpm db:generate`. O SQL gerado falha em tabela com linhas (coluna `NOT NULL` sem default). **Ajuste à mão** conforme D4 (atribuir): `ADD COLUMN` nulo → `UPDATE` atribuindo as linhas ao usuário mais antigo (`ORDER BY created_at, id LIMIT 1`) → se sobrar linha sem dono (não há usuário), `RAISE EXCEPTION` com mensagem clara ("create an account before migrating") → `SET NOT NULL`, FK e índice. Não mexa no snapshot.
   - Antes de aplicar no banco de dev: criar a conta `dev@mystatistics.local` (slug `dev`) por `POST /api/auth/signup`; ela é a mais antiga e fica dona das atividades existentes. A senha vai para o usuário no relatório.
   - **Pronto quando:** a migração aplica no banco de dev com dados existentes e as atividades antigas aparecem para a conta de dev.
   - Commit: `feat: make activities belong to a user`
 
-- [ ] **T2.2 — Repository e use cases filtrando por usuário**
+- [x] **T2.2 — Repository e use cases filtrando por usuário** — feito em 2026-11-11
   - Todo método do `ActivityRepository` recebe `userId` e filtra por ele (`findById(userId, id)`, `findAll(userId)`…). Atividade de outro usuário se comporta como inexistente → 404 `NOT_FOUND`.
   - Use cases recebem `{ userId, ... }`; o controller faz `.use(authGuard)` e repassa o `userId`.
   - Testes de integração passam a usar `createTestUser()`. Novos casos: usuário B não lista, não busca, não edita nem apaga atividade do A (404), e a do A continua intacta.
@@ -214,7 +215,7 @@ Adaptação das regras do modal "REGRAS DO SYSTEM" do modelo para `study` e `exe
   - **Pronto quando:** testes passam; via `curl`, sem cookie → 401; com o cookie do B no id do A → 404.
   - Commit: `feat: scope activity routes to the logged-in user`
 
-- [ ] **T2.3 — ACCEPTANCE das Fases 1 e 2**
+- [x] **T2.3 — ACCEPTANCE das Fases 1 e 2** — feito em 2026-11-11
   - §5.1.1: detalhe os critérios de back e marque os que já valem. §5.6: marque "(multiusuário)".
   - Commit: `docs: update acceptance for accounts and activity ownership`
 
