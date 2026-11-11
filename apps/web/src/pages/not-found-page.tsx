@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { paths } from "@/app/paths";
+import { Bracketed } from "@/components/game/bracketed";
 import { Panel } from "@/components/game/panel";
 import { pixelButtonVariants } from "@/components/game/pixel-button";
 import { AppShell } from "@/components/layout/app-shell";
@@ -16,7 +17,7 @@ export function NotFoundPage() {
             <PixelSprite sprite={icons.excl} size={16} />
           </div>
           <h1 className="font-title text-base font-normal tracking-[0.12em] text-txt uppercase text-shadow-tglow">
-            [Not found]
+            <Bracketed>Not found</Bracketed>
           </h1>
           <p className="text-xs text-mut">This page does not exist in the System.</p>
           <Link to={paths.dashboard} className={pixelButtonVariants({ variant: "primary", className: "mt-2" })}>

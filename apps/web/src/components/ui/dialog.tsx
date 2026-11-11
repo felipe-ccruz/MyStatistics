@@ -1,5 +1,6 @@
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type * as React from "react";
+import { Bracketed } from "@/components/game/bracketed";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PixelSprite } from "@/pixel/PixelSprite";
@@ -104,7 +105,7 @@ function DialogTitle({ className, children, ...props }: React.ComponentProps<typ
       )}
       {...props}
     >
-      [{children}]
+      <Bracketed>{children}</Bracketed>
     </DialogPrimitive.Title>
   );
 }

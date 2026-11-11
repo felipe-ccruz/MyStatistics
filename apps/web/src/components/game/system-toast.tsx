@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { Bracketed } from "@/components/game/bracketed";
 import { cn } from "@/lib/utils";
 
 const DURATION = { success: 2900, error: 5000 } as const;
@@ -25,7 +26,7 @@ function SystemToast({ title, description, tone }: SystemToastProps) {
       style={{ animationDuration: `${DURATION[tone]}ms` }}
     >
       <div className={cn("font-title text-[11px] tracking-[0.16em]", tone === "error" ? "text-hp" : "text-acc")}>
-        [ SYSTEM ]
+        <Bracketed spaced>SYSTEM</Bracketed>
       </div>
       <div className="mt-1 font-title text-xl text-txt text-shadow-tglow">{title}</div>
       {description ? <div className="mt-1 text-xs text-mut">{description}</div> : null}

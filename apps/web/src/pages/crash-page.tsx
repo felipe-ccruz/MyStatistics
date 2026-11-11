@@ -1,3 +1,4 @@
+import { Bracketed } from "@/components/game/bracketed";
 import { Panel } from "@/components/game/panel";
 import { PixelButton } from "@/components/game/pixel-button";
 import { PixelSprite } from "@/pixel/PixelSprite";
@@ -13,7 +14,9 @@ export function CrashPage() {
       <Panel tone="quest" className="w-full max-w-sm">
         <div role="alert" className="flex flex-col items-center gap-3 text-center">
           <PixelSprite sprite={icons.excl} size={26} className="text-hp" />
-          <h1 className="font-title text-base font-normal tracking-[0.12em] text-hp uppercase">[System failure]</h1>
+          <h1 className="font-title text-base font-normal tracking-[0.12em] text-hp uppercase">
+            <Bracketed>System failure</Bracketed>
+          </h1>
           <p className="text-xs text-mut">Something broke while drawing this screen.</p>
           <PixelButton className="mt-2" onClick={() => window.location.reload()}>
             Reload

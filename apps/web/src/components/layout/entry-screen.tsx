@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Bracketed } from "@/components/game/bracketed";
 import { Panel } from "@/components/game/panel";
 import { PixelSprite } from "@/pixel/PixelSprite";
 import { avatar } from "@/pixel/sprites/avatar";
@@ -19,7 +20,7 @@ export function EntryScreen({ title, children }: EntryScreenProps) {
             <PixelSprite sprite={avatar} size="100%" align="bottom" />
           </div>
           <h1 className="font-title text-base font-normal tracking-[0.1em] text-txt uppercase text-shadow-tglow">
-            [{title}]
+            <Bracketed>{title}</Bracketed>
           </h1>
           {children}
         </div>
