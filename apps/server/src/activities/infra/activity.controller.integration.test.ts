@@ -57,4 +57,23 @@ describe("ActivityController - Integration", () => {
       }
     });
   });
+
+  // Matéria com byte nulo passa no schema (minLength 1) e no trim, mas o Postgres recusa
+  // o texto (22021): sem barrar antes, POST/PATCH respondem 500 em vez de 422.
+  describe("subject com byte nulo", () => {
+    it("POST responde 422 VALIDATION (não 500)", async () => {
+      const user = await IntegrationTestHelper.createTestUser();
+
+      const response = await ActivityController.handle(
+        new Request("http://localhost/activities", {
+          method: "POST",
+          headers: { cookie: user.cookie, "content-type": "application/json" },
+          body: JSON.stringify({ category: "study", hours: 1, minutes: 0, subject: "Calc\u0000ulus" }),
+        }),
+      );
+
+      expect(response.status).toBe(422);
+      expect(await response.json()).toMatchObject({ error: { code: "VALIDATION" } });
+    });
+  });
 });

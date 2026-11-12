@@ -12,6 +12,12 @@ describe("normalizeMetricName", () => {
       expect(() => normalizeMetricName(name)).toThrow(expect.objectContaining({ status: 422, apiCode: "VALIDATION" }));
     }
   });
+
+  it("recusa caractere de controle (ex.: byte nulo) com 422 VALIDATION", () => {
+    for (const name of ["We\u0000ight", "Weight\n2"]) {
+      expect(() => normalizeMetricName(name)).toThrow(expect.objectContaining({ status: 422, apiCode: "VALIDATION" }));
+    }
+  });
 });
 
 describe("normalizeMetricUnit", () => {
@@ -19,5 +25,11 @@ describe("normalizeMetricUnit", () => {
     expect(normalizeMetricUnit(" kg ")).toBe("kg");
     expect(normalizeMetricUnit("")).toBe("");
     expect(normalizeMetricUnit("  ")).toBe("");
+  });
+
+  it("recusa caractere de controle com 422 VALIDATION", () => {
+    expect(() => normalizeMetricUnit("k\u0000g")).toThrow(
+      expect.objectContaining({ status: 422, apiCode: "VALIDATION" }),
+    );
   });
 });

@@ -22,6 +22,12 @@ describe("normalizeSubject", () => {
   it("rejeita matéria só de espaços com VALIDATION", () => {
     expect(() => normalizeSubject("   ")).toThrow(expect.objectContaining({ apiCode: "VALIDATION" }));
   });
+
+  it("rejeita caractere de controle (ex.: byte nulo) com VALIDATION", () => {
+    for (const subject of ["Calc\u0000ulus", "\u0000", "Calculus\n", "a\u007f"]) {
+      expect(() => normalizeSubject(subject)).toThrow(expect.objectContaining({ status: 422, apiCode: "VALIDATION" }));
+    }
+  });
 });
 
 describe("assertSubjectAllowed", () => {

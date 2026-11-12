@@ -1,5 +1,6 @@
 import type { ActivityCategory } from "@mystatistics/shared";
 import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
+import { hasControlCharacter } from "@/shared/utils/text";
 
 /**
  * Lógica pura das atividades — sem banco, sem env. Fica isolada aqui para ser
@@ -15,8 +16,12 @@ export function toDurationMinutes(hours: number, minutes: number): number {
   return total;
 }
 
-/** Matéria sem espaços nas pontas. Só espaços → 422 `VALIDATION` (o schema só exige 1 caractere). */
+/**
+ * Matéria sem espaços nas pontas. Só espaços, ou caractere de controle (ex.: byte nulo) → 422
+ * `VALIDATION` (o schema só exige 1 caractere).
+ */
 export function normalizeSubject(subject: string): string {
+  if (hasControlCharacter(subject)) throw new UnprocessableEntityError("Invalid subject.", "VALIDATION");
   const trimmed = subject.trim();
   if (trimmed === "") throw new UnprocessableEntityError("Subject can't be blank.", "VALIDATION");
   return trimmed;
