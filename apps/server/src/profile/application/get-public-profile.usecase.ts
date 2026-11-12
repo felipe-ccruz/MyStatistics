@@ -1,7 +1,8 @@
 import { ACTIVITY_CATEGORIES, type PublicProfile } from "@mystatistics/shared";
 import { getActivitySummaryUseCase } from "@/activities/application/get-activity-summary.usecase";
 import { ProfileRepository } from "@/auth/infra/profile.repository";
-import { getMetricSummaryUseCase } from "@/metrics/application/get-metric-summary.usecase";
+import { metricSummaryOf, metricSummaryRangeOf } from "@/metrics/domain/metric-summary";
+import { EntryRepository } from "@/metrics/infra/entry.repository";
 import { MetricRepository } from "@/metrics/infra/metric.repository";
 import { getProgressUseCase } from "@/progress/application/get-progress.usecase";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
@@ -19,10 +20,11 @@ type GetPublicProfileInput = {
  * Portfólio público de um perfil, sem login. Slug inexistente **ou** perfil privado → o mesmo 404
  * `PROFILE_NOT_FOUND`, com a mesma mensagem: não dá para descobrir que o perfil existe.
  *
- * Só os itens visíveis entram, e só como agregado (os mesmos use cases das rotas do dono):
+ * Só os itens visíveis entram, e só como agregado (as mesmas regras das rotas do dono):
  * - `progress`: o mesmo do `GET /api/progress`;
  * - `activities`: por categoria visível, os resumos de 7 e 30 dias só daquela categoria;
- * - `metrics`: por métrica visível, por nome, o resumo de 30 dias.
+ * - `metrics`: por métrica visível, por nome, o resumo de 30 dias (o mesmo `metricSummaryOf` do
+ *   `GET /api/metrics/:id/summary`).
  * Tipo sem nenhum item visível fica fora do JSON (chave ausente). Quem pede não importa: não há
  * sessão aqui, então o visitante logado (ou o dono) recebe o mesmo que o anônimo.
  */
@@ -59,11 +61,14 @@ export async function getPublicProfileUseCase({
     isVisible(choices, "metric", metricRefOf(metric.id)),
   );
   if (metrics.length > 0) {
+    // A métrica já foi lida acima: o resumo sai direto dos registros, sem buscá-la de novo (uma
+    // query a menos por métrica, e uma métrica apagada no meio do pedido vira resumo vazio, não 404).
+    const range = metricSummaryRangeOf("30d", today);
     result.metrics = await Promise.all(
       metrics.map(async (metric) => ({
         name: metric.name,
         unit: metric.unit,
-        summary30d: await getMetricSummaryUseCase({ userId, metricId: metric.id, period: "30d", today }),
+        summary30d: metricSummaryOf("30d", await EntryRepository.valuesBetween(userId, metric.id, range), today),
       })),
     );
   }
