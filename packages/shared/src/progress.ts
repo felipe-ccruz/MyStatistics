@@ -33,6 +33,9 @@ export const RANK_MIN_LEVEL: Record<Rank, number> = { E: 1, D: 5, C: 10, B: 15, 
 /** Duração de referência de uma sessão de estudo, em minutos: FOCUS = duração média de uma atividade study ÷ este valor. */
 export const FOCUS_SESSION_MINUTES = 75;
 
+/** Janela dos atributos, em dias de calendário (incluindo hoje): INT, STR, FOCUS e DISCIPLINE são médias deste período. */
+export const ATTRIBUTES_WINDOW_DAYS = 30;
+
 /** Classe pelo atributo dominante entre INT e STR; empate → "Adventurer". */
 export const CLASS_NAMES = ["Arcane Student", "Iron Warrior", "Adventurer"] as const;
 
@@ -81,7 +84,7 @@ export type Progress = {
     /** % das metas da daily quest de hoje concluídas. */
     mood: number;
   };
-  /** Médias dos últimos 30 dias (incluindo hoje). */
+  /** Médias dos últimos `ATTRIBUTES_WINDOW_DAYS` dias (incluindo hoje). */
   attributes: {
     /** Minutos de study por dia ÷ 90. */
     int: number;
