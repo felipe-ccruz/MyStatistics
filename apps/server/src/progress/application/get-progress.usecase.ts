@@ -1,5 +1,6 @@
 import type { Progress } from "@mystatistics/shared";
 import { minutesOn, toDayMinutes } from "@/activities/domain/day-minutes";
+import { ActivityRepository } from "@/activities/infra/activity.repository";
 import type { SessionUser } from "@/auth/domain/auth.types";
 import { todayISO } from "@/shared/utils/calendar-day";
 import { attributesOf, attributeWindowOf } from "../domain/attributes";
@@ -9,7 +10,6 @@ import { levelOf, rankOf } from "../domain/level";
 import { statusOf } from "../domain/status";
 import { streakOf } from "../domain/streak";
 import { totalXpOf } from "../domain/xp";
-import { ProgressRepository } from "../infra/progress.repository";
 
 type GetProgressInput = SessionUser & {
   /** Dia usado como "hoje". Padrão: o dia de calendário do server; os testes fixam um dia. */
@@ -17,15 +17,16 @@ type GetProgressInput = SessionUser & {
 };
 
 /**
- * Progresso do usuário logado (D5/D6), calculado a partir das atividades dele: o banco devolve
- * os minutos agregados e as funções puras de `progress/domain` aplicam as regras.
+ * Progresso do usuário logado (D5/D6), calculado a partir das atividades dele: o módulo não tem
+ * tabela própria — o `ActivityRepository` devolve os minutos agregados e as funções puras de
+ * `progress/domain` aplicam as regras.
  * O XP conta toda a história (inclusive dia lançado depois de hoje).
  */
 export async function getProgressUseCase({ userId, today = todayISO() }: GetProgressInput): Promise<Progress> {
   const window = attributeWindowOf(today);
   const [rows, studySessions] = await Promise.all([
-    ProgressRepository.minutesPerDayAndCategory(userId),
-    ProgressRepository.studySessionsBetween(userId, window.from, window.to),
+    ActivityRepository.minutesPerDayAndCategory(userId),
+    ActivityRepository.studySessionsBetween(userId, window.from, window.to),
   ]);
   const byDay = toDayMinutes(rows);
 

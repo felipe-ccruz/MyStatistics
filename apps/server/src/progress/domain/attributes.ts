@@ -1,6 +1,6 @@
 import { ACTIVITY_CATEGORIES, DAILY_GOAL_MINUTES, type Progress } from "@mystatistics/shared";
 import { FOCUS_SESSION_MINUTES } from "@mystatistics/shared/progress";
-import { type DayMinutes, minutesOn } from "@/activities/domain/day-minutes";
+import { type DayMinutes, minutesOn, type StudySessions } from "@/activities/domain/day-minutes";
 import { addDaysISO, daysEndingOn } from "@/shared/utils/calendar-day";
 import { toScore } from "./score";
 
@@ -8,9 +8,6 @@ import { toScore } from "./score";
 
 /** Tamanho da janela dos atributos, em dias (terminando hoje). */
 export const ATTRIBUTE_WINDOW_DAYS = 30;
-
-/** As atividades study da janela: quantas são e quantos minutos somam. */
-export type StudySessions = { count: number; totalMinutes: number };
 
 /** Primeiro e último dia da janela dos atributos. */
 export function attributeWindowOf(today: string): { from: string; to: string } {

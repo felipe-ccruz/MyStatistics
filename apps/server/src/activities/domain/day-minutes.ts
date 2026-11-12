@@ -11,6 +11,9 @@ export type CategoryMinutes = Record<ActivityCategory, number>;
 /** Linha do agregado SQL: soma dos minutos de uma categoria num dia. */
 export type DailyCategoryMinutes = { date: string; category: ActivityCategory; minutes: number };
 
+/** Atividades `study` de um intervalo: quantas são e quantos minutos somam (entrada do FOCUS). */
+export type StudySessions = { count: number; totalMinutes: number };
+
 /** Dia `"YYYY-MM-DD"` → minutos por categoria. Dia sem atividade não aparece. */
 export type DayMinutes = ReadonlyMap<string, CategoryMinutes>;
 
