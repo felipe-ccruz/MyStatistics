@@ -47,6 +47,16 @@ export class ActivityRepository {
     return row ?? null;
   }
 
+  /**
+   * Como `findById`, mas trava a linha (`for update`) até o fim da transação: outro update da
+   * mesma atividade espera, e a regra aplicada sobre a leitura vale também na escrita. Use dentro
+   * de `db.transaction`, passando o `tx`.
+   */
+  static async findByIdForUpdate(userId: string, id: number, tx: Transaction): Promise<ActivityRow | null> {
+    const [row] = await tx.select().from(activitiesTable).where(ownedBy(userId, id)).limit(1).for("update");
+    return row ?? null;
+  }
+
   static async update(userId: string, id: number, changes: ActivityChanges, tx?: Transaction): Promise<ActivityRow> {
     const [row] = await (tx ?? db).update(activitiesTable).set(changes).where(ownedBy(userId, id)).returning();
     if (!row) throw new HttpError(500, "Failed to update the activity.", "INTERNAL");

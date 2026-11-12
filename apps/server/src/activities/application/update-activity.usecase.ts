@@ -19,11 +19,13 @@ type UpdateActivityInput = SessionUser & ActivityIdParams & UpdateActivity;
  * `subject: null` remove a matéria; matéria final fora de `study` → 422 `SUBJECT_NOT_ALLOWED`
  * (ex.: mudar para `exercise` uma atividade com matéria sem mandar `subject: null` junto).
  * `date` que não existe → 422 `VALIDATION`; depois de hoje → 422 `FUTURE_DATE`.
- * Lê e escreve na mesma transação, para não atualizar uma linha apagada no meio do caminho.
+ * Lê com a linha travada (`for update`) e escreve na mesma transação: dois PATCH ao mesmo tempo
+ * viram um depois do outro, e a regra da matéria é conferida contra a versão que vai ser escrita
+ * (sem isso, sobrava um `exercise` com matéria). Também não atualiza uma linha apagada no meio.
  */
 export async function updateActivityUseCase({ userId, id, ...input }: UpdateActivityInput): Promise<Activity> {
   return db.transaction(async (tx) => {
-    const current = await ActivityRepository.findById(userId, id, tx);
+    const current = await ActivityRepository.findByIdForUpdate(userId, id, tx);
     if (!current) throw new NotFoundError("Activity not found.");
 
     const changes: ActivityChanges = {};

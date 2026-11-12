@@ -1,8 +1,12 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { env } from "@/shared/infra/env/env";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
 import { addDaysISO, todayISO } from "@/shared/utils/calendar-day";
 import { IntegrationTestHelper, type TestUser } from "@/shared/utils/test-helpers/integration-test-helper";
-import type { ActivityRow } from "../domain/activity.schema";
+import { type ActivityRow, activitiesTable } from "../domain/activity.schema";
 import { ActivityRepository } from "../infra/activity.repository";
 import { updateActivityUseCase } from "./update-activity.usecase";
 
@@ -169,5 +173,74 @@ describe("updateActivityUseCase - Integration", () => {
       expect(error).toBeInstanceOf(NotFoundError);
       expect(await ActivityRepository.findById(user.id, existing.id)).toEqual(existing);
     });
+  });
+});
+
+/**
+ * Corrida entre dois PATCH da mesma atividade (ex.: duas abas). Outra conexão muda a
+ * atividade para `exercise` (removendo a matéria) numa transação ainda aberta; o use case lê a
+ * versão antiga (`study`), valida `subject` contra ela e o UPDATE dele espera o lock da linha.
+ * Quando a outra commita, o UPDATE só troca o `subject` — e sobra um `exercise` com matéria,
+ * o que a regra SUBJECT_NOT_ALLOWED proíbe. Precisa de `SELECT ... FOR UPDATE` no `findById` da
+ * transação ou de um CHECK no banco.
+ */
+describe("updateActivityUseCase - Integration (dois PATCH ao mesmo tempo)", () => {
+  const client = postgres(env.DATABASE_URL, { max: 2 });
+  const other = drizzle(client);
+
+  beforeAll(() => IntegrationTestHelper.setupTestDatabase());
+  afterEach(() => IntegrationTestHelper.truncateAll());
+  afterAll(() => client.end());
+
+  async function waitForBlockedQuery(): Promise<boolean> {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const rows = await other.execute<{ waiting: number }>(
+        sql`select count(*)::int as waiting from pg_stat_activity
+            where datname = current_database() and wait_event_type = 'Lock'`,
+      );
+      if ((rows[0]?.waiting ?? 0) > 0) return true;
+      await Bun.sleep(20);
+    }
+    return false;
+  }
+
+  it("nunca deixa uma atividade exercise com matéria", async () => {
+    const user = await IntegrationTestHelper.createTestUser();
+    const activity = await ActivityRepository.create({
+      userId: user.id,
+      category: "study",
+      durationMinutes: 60,
+      date: "2026-10-21",
+    });
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let changed = () => {};
+    const changedSignal = new Promise<void>((resolve) => {
+      changed = resolve;
+    });
+
+    const holder = other.transaction(async (tx) => {
+      await tx
+        .update(activitiesTable)
+        .set({ category: "exercise", subject: null })
+        .where(eq(activitiesTable.id, activity.id));
+      changed();
+      await gate;
+    });
+    await changedSignal;
+
+    const racing = updateActivityUseCase({ userId: user.id, id: activity.id, subject: "Calculus" }).then(
+      (value) => value,
+      (error: unknown) => error,
+    );
+    await waitForBlockedQuery();
+    release();
+    await holder;
+    await racing;
+
+    const [row] = await other.select().from(activitiesTable).where(eq(activitiesTable.id, activity.id));
+    expect(row?.category === "exercise" && row.subject !== null).toBe(false);
   });
 });
