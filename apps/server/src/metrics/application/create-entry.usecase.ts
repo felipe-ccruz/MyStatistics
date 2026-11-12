@@ -3,7 +3,8 @@ import type { SessionUser } from "@/auth/domain/auth.types";
 import { db } from "@/shared/infra/databases/postgres";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
 import { todayISO } from "@/shared/utils/calendar-day";
-import { assertFiniteValue, resolveEntryDate } from "../domain/entry-logic";
+import { resolveLoggedDay } from "@/shared/utils/logged-day";
+import { assertFiniteValue } from "../domain/entry-logic";
 import { toEntry } from "../domain/metric.mapper";
 import { METRIC_NOT_FOUND_MESSAGE } from "../domain/metric-logic";
 import { EntryRepository } from "../infra/entry.repository";
@@ -18,7 +19,7 @@ type CreateEntryInput = SessionUser & CreateEntry & { metricId: number };
  */
 export async function createEntryUseCase({ userId, metricId, value, date }: CreateEntryInput): Promise<Entry> {
   assertFiniteValue(value);
-  const day = resolveEntryDate(date, todayISO());
+  const day = resolveLoggedDay(date, todayISO());
 
   return db.transaction(async (tx) => {
     const metric = await MetricRepository.findById(userId, metricId, tx);
