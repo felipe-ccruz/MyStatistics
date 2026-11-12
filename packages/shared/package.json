@@ -9,6 +9,7 @@
     ".": "./src/index.ts",
     "./activity": "./src/activity.ts",
     "./auth": "./src/auth.ts",
+    "./profile": "./src/profile.ts",
     "./progress": "./src/progress.ts"
   },
   "scripts": {
