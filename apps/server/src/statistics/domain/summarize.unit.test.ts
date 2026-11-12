@@ -60,3 +60,25 @@ describe("trendOf", () => {
     expect(trendOf(80, null)).toBeNull();
   });
 });
+
+// Valores finitos enormes (o CreateEntry aceita qualquer t.Number finito): a soma estoura
+// para Infinity e a média sai Infinity — que o JSON.stringify serializa como null, com enoughData true.
+describe("summarize com valores no limite do double", () => {
+  it("a média de valores finitos é finita", () => {
+    const { mean } = summarize([Number.MAX_VALUE, Number.MAX_VALUE]);
+
+    expect(Number.isFinite(mean)).toBe(true);
+    expect(mean).toBe(Number.MAX_VALUE);
+  });
+
+  it("meanOf também não estoura", () => {
+    expect(Number.isFinite(meanOf([Number.MAX_VALUE, Number.MAX_VALUE]))).toBe(true);
+    expect(meanOf([Number.MAX_VALUE, -Number.MAX_VALUE])).toBe(0);
+  });
+
+  it("a tendência entre médias enormes de sinais opostos não estoura", () => {
+    expect(trendOf(Number.MAX_VALUE, -Number.MAX_VALUE)?.direction).toBe("up");
+    expect(trendOf(-Number.MAX_VALUE, Number.MAX_VALUE)?.direction).toBe("down");
+    expect(trendOf(Number.MAX_VALUE, Number.MAX_VALUE)?.direction).toBe("flat");
+  });
+});
