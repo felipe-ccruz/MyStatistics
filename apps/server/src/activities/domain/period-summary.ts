@@ -1,5 +1,5 @@
 import { ACTIVITY_CATEGORIES, type ActivitySummary, type SummaryPeriod } from "@mystatistics/shared";
-import { addDaysISO, daysEndingOn } from "@/shared/utils/calendar-day";
+import { addDaysISO, type DayRange, daysEndingOn } from "@/shared/utils/calendar-day";
 import { type CategoryMinutes, type DayMinutes, emptyCategoryMinutes, minutesOn, totalMinutesOf } from "./day-minutes";
 
 /** Resumo das atividades num período que termina hoje. Lógica pura; "hoje" é parâmetro. */
@@ -14,7 +14,7 @@ export type DailySubjectMinutes = { date: string; subject: string | null; minute
 export const PERIOD_DAYS: Record<SummaryPeriod, number> = { "7d": 7, "30d": 30 };
 
 /** Os dias que o resumo precisa ler: o período anterior inteiro e o atual, até hoje. */
-export function summaryRangeOf(period: SummaryPeriod, today: string): { from: string; to: string } {
+export function summaryRangeOf(period: SummaryPeriod, today: string): Required<DayRange> {
   return { from: addDaysISO(today, -(2 * PERIOD_DAYS[period] - 1)), to: today };
 }
 

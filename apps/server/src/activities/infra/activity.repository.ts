@@ -88,15 +88,10 @@ export class ActivityRepository {
   }
 
   /**
-   * Quantas atividades `study` o usuário tem entre `from` e `to` (inclusive) e quantos minutos
-   * elas somam. É por atividade, não por dia: é o que a média do FOCUS precisa.
+   * Quantas atividades `study` o usuário tem no intervalo (inclusive) e quantos minutos elas
+   * somam. É por atividade, não por dia: é o que a média do FOCUS precisa.
    */
-  static async studySessionsBetween(
-    userId: string,
-    from: string,
-    to: string,
-    tx?: Transaction,
-  ): Promise<StudySessions> {
+  static async studySessions(userId: string, range: DayRange = {}, tx?: Transaction): Promise<StudySessions> {
     const [row] = await (tx ?? db)
       .select({
         count: count(),
@@ -105,15 +100,14 @@ export class ActivityRepository {
         ),
       })
       .from(activitiesTable)
-      .where(and(eq(activitiesTable.userId, userId), eq(activitiesTable.category, "study"), ...inRange({ from, to })));
+      .where(and(eq(activitiesTable.userId, userId), eq(activitiesTable.category, "study"), ...inRange(range)));
     return row ?? { count: 0, totalMinutes: 0 };
   }
 
-  /** Soma dos minutos de `study` por dia e matéria (`null` = sem matéria) entre `from` e `to` (inclusive). */
-  static async studyMinutesPerDayAndSubjectBetween(
+  /** Soma dos minutos de `study` por dia e matéria (`null` = sem matéria) no intervalo (inclusive). */
+  static async studyMinutesPerDayAndSubject(
     userId: string,
-    from: string,
-    to: string,
+    range: DayRange = {},
     tx?: Transaction,
   ): Promise<DailySubjectMinutes[]> {
     return (tx ?? db)
@@ -123,14 +117,7 @@ export class ActivityRepository {
         minutes: sql<number>`cast(sum(${activitiesTable.durationMinutes}) as integer)`.mapWith(Number),
       })
       .from(activitiesTable)
-      .where(
-        and(
-          eq(activitiesTable.userId, userId),
-          eq(activitiesTable.category, "study"),
-          gte(activitiesTable.date, from),
-          lte(activitiesTable.date, to),
-        ),
-      )
+      .where(and(eq(activitiesTable.userId, userId), eq(activitiesTable.category, "study"), ...inRange(range)))
       .groupBy(activitiesTable.date, activitiesTable.subject);
   }
 }

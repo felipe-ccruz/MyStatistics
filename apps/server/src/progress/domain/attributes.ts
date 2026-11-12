@@ -1,13 +1,13 @@
 import { ACTIVITY_CATEGORIES, DAILY_GOAL_MINUTES, type Progress } from "@mystatistics/shared";
 import { ATTRIBUTES_WINDOW_DAYS, FOCUS_SESSION_MINUTES } from "@mystatistics/shared/progress";
 import { type DayMinutes, minutesOn, type StudySessions } from "@/activities/domain/day-minutes";
-import { addDaysISO, daysEndingOn } from "@/shared/utils/calendar-day";
+import { addDaysISO, type DayRange, daysEndingOn } from "@/shared/utils/calendar-day";
 import { toScore } from "./score";
 
 /** Atributos (D5): médias dos últimos `ATTRIBUTES_WINDOW_DAYS` dias, incluindo hoje, em 0–100. Lógica pura. */
 
 /** Primeiro e último dia da janela dos atributos. */
-export function attributeWindowOf(today: string): { from: string; to: string } {
+export function attributeWindowOf(today: string): Required<DayRange> {
   return { from: addDaysISO(today, -(ATTRIBUTES_WINDOW_DAYS - 1)), to: today };
 }
 

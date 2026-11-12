@@ -23,10 +23,9 @@ type GetProgressInput = SessionUser & {
  * O XP conta toda a história (inclusive dia lançado depois de hoje).
  */
 export async function getProgressUseCase({ userId, today = todayISO() }: GetProgressInput): Promise<Progress> {
-  const window = attributeWindowOf(today);
   const [rows, studySessions] = await Promise.all([
     ActivityRepository.minutesPerDayAndCategory(userId),
-    ActivityRepository.studySessionsBetween(userId, window.from, window.to),
+    ActivityRepository.studySessions(userId, attributeWindowOf(today)),
   ]);
   const byDay = toDayMinutes(rows);
 

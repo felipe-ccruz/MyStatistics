@@ -31,7 +31,7 @@ export async function getActivitySummaryUseCase({
   const withStudy = category === undefined || category === "study";
   const [rows, studyRows] = await Promise.all([
     ActivityRepository.minutesPerDayAndCategory(userId, range),
-    withStudy ? ActivityRepository.studyMinutesPerDayAndSubjectBetween(userId, range.from, range.to) : [],
+    withStudy ? ActivityRepository.studyMinutesPerDayAndSubject(userId, range) : [],
   ]);
   const kept = category === undefined ? rows : rows.filter((row) => row.category === category);
   return periodSummaryOf(period, toDayMinutes(kept), today, studyRows);
