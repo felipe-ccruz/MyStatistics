@@ -3,6 +3,8 @@ import type { SessionUser } from "@/auth/domain/auth.types";
 import { db } from "@/shared/infra/databases/postgres";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
 import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
+import { todayISO } from "@/shared/utils/calendar-day";
+import { resolveLoggedDay } from "@/shared/utils/logged-day";
 import { toActivity } from "../domain/activity.mapper";
 import type { ActivityIdParams } from "../domain/activity.types";
 import { toDurationMinutes, updatedSubjectOf } from "../domain/activity-logic";
@@ -16,6 +18,7 @@ type UpdateActivityInput = SessionUser & ActivityIdParams & UpdateActivity;
  * responde 422. Atividade inexistente ou de outro usuário responde 404 `NOT_FOUND`.
  * `subject: null` remove a matéria; matéria final fora de `study` → 422 `SUBJECT_NOT_ALLOWED`
  * (ex.: mudar para `exercise` uma atividade com matéria sem mandar `subject: null` junto).
+ * `date` que não existe → 422 `VALIDATION`; depois de hoje → 422 `FUTURE_DATE`.
  * Lê e escreve na mesma transação, para não atualizar uma linha apagada no meio do caminho.
  */
 export async function updateActivityUseCase({ userId, id, ...input }: UpdateActivityInput): Promise<Activity> {
@@ -25,7 +28,7 @@ export async function updateActivityUseCase({ userId, id, ...input }: UpdateActi
 
     const changes: ActivityChanges = {};
     if (input.category !== undefined) changes.category = input.category;
-    if (input.date !== undefined) changes.date = input.date;
+    if (input.date !== undefined) changes.date = resolveLoggedDay(input.date, todayISO());
 
     if (input.hours !== undefined && input.minutes !== undefined) {
       changes.durationMinutes = toDurationMinutes(input.hours, input.minutes);

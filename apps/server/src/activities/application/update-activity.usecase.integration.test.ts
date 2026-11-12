@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
+import { addDaysISO, todayISO } from "@/shared/utils/calendar-day";
 import { IntegrationTestHelper, type TestUser } from "@/shared/utils/test-helpers/integration-test-helper";
 import type { ActivityRow } from "../domain/activity.schema";
 import { ActivityRepository } from "../infra/activity.repository";
@@ -120,6 +121,24 @@ describe("updateActivityUseCase - Integration", () => {
 
       expect(error).toMatchObject({ status: 422, apiCode: "INVALID_DURATION" });
       expect((await ActivityRepository.findById(user.id, existing.id))?.durationMinutes).toBe(90);
+    });
+
+    it("rejeita dia inexistente com VALIDATION e não altera nada", async () => {
+      const error = await IntegrationTestHelper.rejectionOf(
+        updateActivityUseCase({ userId: user.id, id: existing.id, date: "2026-02-31" }),
+      );
+
+      expect(error).toMatchObject({ status: 422, apiCode: "VALIDATION" });
+      expect(await ActivityRepository.findById(user.id, existing.id)).toEqual(existing);
+    });
+
+    it("rejeita data depois de hoje com FUTURE_DATE e não altera nada", async () => {
+      const error = await IntegrationTestHelper.rejectionOf(
+        updateActivityUseCase({ userId: user.id, id: existing.id, date: addDaysISO(todayISO(), 1) }),
+      );
+
+      expect(error).toMatchObject({ status: 422, apiCode: "FUTURE_DATE" });
+      expect(await ActivityRepository.findById(user.id, existing.id)).toEqual(existing);
     });
 
     it("rejeita body sem nada a mudar com EMPTY_UPDATE", async () => {
