@@ -94,6 +94,32 @@ describe("getActivitySummaryUseCase - Integration", () => {
       ]);
     });
 
+    it("com category, resume só aquela categoria (as outras vêm 0)", async () => {
+      await ActivityRepository.create({
+        userId: user.id,
+        category: "study",
+        durationMinutes: 30,
+        date: TODAY,
+        subject: "Calculus",
+      });
+      await log(user.id, "exercise", 45, TODAY);
+
+      const exercise = await getActivitySummaryUseCase({
+        userId: user.id,
+        period: "7d",
+        today: TODAY,
+        category: "exercise",
+      });
+      const study = await getActivitySummaryUseCase({ userId: user.id, period: "7d", today: TODAY, category: "study" });
+
+      expect(exercise).toMatchObject({ totalMinutes: 45, perCategory: { study: 0, exercise: 45 }, studyBySubject: [] });
+      expect(study).toMatchObject({
+        totalMinutes: 30,
+        perCategory: { study: 30, exercise: 0 },
+        studyBySubject: [{ subject: "Calculus", minutes: 30 }],
+      });
+    });
+
     it("usa o dia de calendário do server quando today não vem", async () => {
       const summary = await getActivitySummaryUseCase({ userId: user.id, period: "7d" });
 

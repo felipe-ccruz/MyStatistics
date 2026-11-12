@@ -11,6 +11,9 @@ import { MAX_INTEGER_ID } from "@/shared/infra/id-param";
 /** Item que não existe para o usuário (categoria inválida, métrica de outro usuário ou apagada…). */
 export const PROFILE_ITEM_NOT_FOUND_MESSAGE = "Profile item not found.";
 
+/** Slug inexistente ou perfil privado: a mesma mensagem nos dois casos. */
+export const PROFILE_NOT_FOUND_MESSAGE = "Profile not found.";
+
 export const PROGRESS_LABEL = "Progress";
 
 /** Rótulo de cada categoria de atividade, pronto para a UI. */
