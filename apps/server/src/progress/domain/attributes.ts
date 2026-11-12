@@ -1,4 +1,5 @@
 import { ACTIVITY_CATEGORIES, DAILY_GOAL_MINUTES, type Progress } from "@mystatistics/shared";
+import { FOCUS_SESSION_MINUTES } from "@mystatistics/shared/progress";
 import { type DayMinutes, minutesOn } from "@/activities/domain/day-minutes";
 import { addDaysISO, daysEndingOn } from "@/shared/utils/calendar-day";
 import { toScore } from "./score";
@@ -7,9 +8,6 @@ import { toScore } from "./score";
 
 /** Tamanho da janela dos atributos, em dias (terminando hoje). */
 export const ATTRIBUTE_WINDOW_DAYS = 30;
-
-/** Duração de uma atividade study que vale FOCUS 100 (D5; o contrato não traz esta constante). */
-export const FOCUS_SESSION_MINUTES = 75;
 
 /** As atividades study da janela: quantas são e quantos minutos somam. */
 export type StudySessions = { count: number; totalMinutes: number };
