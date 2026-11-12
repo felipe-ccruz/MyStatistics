@@ -5,7 +5,7 @@ import {
   type ProfileItemKind,
   SLUG_PATTERN,
 } from "@mystatistics/shared";
-import { MAX_INTEGER_ID } from "@/shared/infra/id-param";
+import { MAX_INTEGER_ID } from "@/shared/utils/integer-id";
 
 /** Regras puras dos itens do portfólio — sem banco, sem env. */
 

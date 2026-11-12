@@ -1,7 +1,5 @@
 import { t } from "elysia";
-
-/** Maior valor do `integer` do Postgres (e de um `serial`). */
-export const MAX_INTEGER_ID = 2_147_483_647;
+import { MAX_INTEGER_ID } from "@/shared/utils/integer-id";
 
 /**
  * Id inteiro num path param (`:id`, `:entryId`). `t.Numeric` converte o texto da URL em número;
