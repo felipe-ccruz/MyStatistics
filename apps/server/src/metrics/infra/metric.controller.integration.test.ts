@@ -29,6 +29,7 @@ describe("MetricController/EntryController - Integration", () => {
           request("DELETE", `/${id}`, user.cookie),
           request("GET", `/${id}/entries`, user.cookie),
           request("POST", `/${id}/entries`, user.cookie, { value: 1 }),
+          request("GET", `/${id}/summary?period=7d`, user.cookie),
           request("DELETE", `/${id}/entries/1`, user.cookie),
           request("DELETE", `/1/entries/${id}`, user.cookie),
         ];
@@ -38,6 +39,34 @@ describe("MetricController/EntryController - Integration", () => {
           expect(await response.json()).toMatchObject({ error: { code: "VALIDATION" } });
         }
       }
+    });
+  });
+
+  describe("GET /metrics/:id/summary", () => {
+    it("responde o resumo da métrica do usuário", async () => {
+      const user = await IntegrationTestHelper.createTestUser();
+      const created = await request("POST", "/", user.cookie, { name: "Weight", unit: "kg" });
+      const { id } = (await created.json()) as { id: number };
+
+      const response = await request("GET", `/${id}/summary?period=all`, user.cookie);
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({ period: "all", count: 0, enoughData: false });
+    });
+
+    it("recusa período fora da lista, ou sem período, com 422 VALIDATION", async () => {
+      const user = await IntegrationTestHelper.createTestUser();
+
+      for (const query of ["?period=90d", ""]) {
+        const response = await request("GET", `/1/summary${query}`, user.cookie);
+
+        expect(response.status).toBe(422);
+        expect(await response.json()).toMatchObject({ error: { code: "VALIDATION" } });
+      }
+    });
+
+    it("responde 401 sem sessão", async () => {
+      expect((await request("GET", "/1/summary?period=7d", "")).status).toBe(401);
     });
   });
 });

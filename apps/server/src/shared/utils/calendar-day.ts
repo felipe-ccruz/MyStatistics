@@ -11,6 +11,9 @@ import { addDays, eachDayOfInterval, format, isValid, parseISO } from "date-fns"
 
 const DAY_FORMAT = "yyyy-MM-dd";
 
+/** Intervalo de dias `"YYYY-MM-DD"`, inclusive nas duas pontas; ponta omitida = sem limite. */
+export type DayRange = { from?: string; to?: string };
+
 /** Dia de hoje no formato "YYYY-MM-DD" (horário local do servidor). */
 export function todayISO(): string {
   const now = new Date();

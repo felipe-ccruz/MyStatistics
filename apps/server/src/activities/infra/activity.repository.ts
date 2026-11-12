@@ -1,15 +1,13 @@
 import { and, count, desc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
 import { db, type Transaction } from "@/shared/infra/databases/postgres";
 import { HttpError } from "@/shared/infra/errors/http-error";
+import type { DayRange } from "@/shared/utils/calendar-day";
 import { type ActivityRow, activitiesTable, type NewActivityRow } from "../domain/activity.schema";
 import type { DailyCategoryMinutes, StudySessions } from "../domain/day-minutes";
 import type { DailySubjectMinutes } from "../domain/period-summary";
 
 /** Campos que um update pode mudar (o `id` e o dono nunca mudam). */
 export type ActivityChanges = Partial<Pick<NewActivityRow, "category" | "durationMinutes" | "date" | "subject">>;
-
-/** Intervalo de dias `"YYYY-MM-DD"`, inclusive nas duas pontas; ponta omitida = sem limite. */
-export type DayRange = { from?: string; to?: string };
 
 /** Filtro "esta atividade, deste usuário": atividade de outro usuário se comporta como inexistente. */
 function ownedBy(userId: string, id: number) {

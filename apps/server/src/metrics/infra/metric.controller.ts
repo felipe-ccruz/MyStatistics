@@ -1,8 +1,9 @@
-import { CreateMetric, type Metric } from "@mystatistics/shared";
+import { CreateMetric, type Metric, type MetricSummary, MetricSummaryQuery } from "@mystatistics/shared";
 import { authGuard } from "@/shared/infra/auth.guard";
 import { createController } from "@/shared/infra/base.controller";
 import { createMetricUseCase } from "../application/create-metric.usecase";
 import { deleteMetricUseCase } from "../application/delete-metric.usecase";
+import { getMetricSummaryUseCase } from "../application/get-metric-summary.usecase";
 import { listMetricsUseCase } from "../application/list-metrics.usecase";
 import { MetricIdParams } from "../domain/metric.types";
 
@@ -34,6 +35,23 @@ export const MetricController = createController({ prefix: "/metrics", tags: ["M
       detail: {
         summary: "Create a metric",
         description: "Name is trimmed and unique per user, case-insensitively (409 METRIC_NAME_TAKEN).",
+      },
+    },
+  )
+
+  // GET /api/metrics/:id/summary?period=7d|30d|all
+  .get(
+    "/:id/summary",
+    ({ params, query, userId }): Promise<MetricSummary> =>
+      getMetricSummaryUseCase({ ...query, metricId: params.id, userId }),
+    {
+      params: MetricIdParams,
+      query: MetricSummaryQuery,
+      detail: {
+        summary: "Summarize a metric's entries",
+        description:
+          "Count, mean, min and max over 7d, 30d (both ending today) or all; with fewer than 2 entries the mean " +
+          "is null. The trend compares the mean with the previous period of the same length.",
       },
     },
   )
