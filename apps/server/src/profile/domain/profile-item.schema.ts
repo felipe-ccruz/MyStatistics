@@ -8,8 +8,7 @@
  * Ao adicionar/alterar uma tabela, rode `pnpm db:generate` e depois `pnpm db:migrate`.
  */
 
-// O índice do shared: o contrato não tem um ponto de entrada puro só para `profile` (ver relatório).
-import { PROFILE_ITEM_KINDS } from "@mystatistics/shared";
+import { PROFILE_ITEM_KINDS } from "@mystatistics/shared/profile";
 import { boolean, pgEnum, pgTable, primaryKey, text, varchar } from "drizzle-orm/pg-core";
 // Import relativo: o drizzle-kit lê os *.schema.ts sem o alias `@/` do tsconfig.
 import { usersTable } from "../../auth/domain/auth.schema";
