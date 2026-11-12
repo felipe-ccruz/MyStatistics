@@ -6,6 +6,7 @@
  */
 
 const UNIQUE_VIOLATION = "23505";
+const FOREIGN_KEY_VIOLATION = "23503";
 
 type DriverError = { code: string; constraint_name?: unknown };
 
@@ -31,6 +32,14 @@ function driverErrorOf(error: unknown): DriverError | null {
 /** `true` quando a query falhou por violar um índice único (SQLSTATE 23505). */
 export function isUniqueViolation(error: unknown): boolean {
   return driverErrorOf(error)?.code === UNIQUE_VIOLATION;
+}
+
+/**
+ * `true` quando a query falhou por violar uma chave estrangeira (SQLSTATE 23503) — ex.: gravar
+ * um registro numa métrica que outra transação apagou depois da checagem.
+ */
+export function isForeignKeyViolation(error: unknown): boolean {
+  return driverErrorOf(error)?.code === FOREIGN_KEY_VIOLATION;
 }
 
 /** Nome da constraint única violada (ex.: `users_email_unique`), ou `null` se não for 23505. */
