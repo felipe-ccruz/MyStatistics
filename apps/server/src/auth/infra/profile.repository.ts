@@ -1,3 +1,4 @@
+import type { ProfileVisibility } from "@mystatistics/shared";
 import { eq } from "drizzle-orm";
 import { db, type Transaction } from "@/shared/infra/databases/postgres";
 import { HttpError } from "@/shared/infra/errors/http-error";
@@ -14,6 +15,20 @@ export class ProfileRepository {
 
   static async findByUserId(userId: string, tx?: Transaction): Promise<ProfileRow | null> {
     const [row] = await (tx ?? db).select().from(profilesTable).where(eq(profilesTable.userId, userId)).limit(1);
+    return row ?? null;
+  }
+
+  /** Troca a visibilidade do perfil; `null` se o usuário não tem perfil. */
+  static async updateVisibility(
+    userId: string,
+    visibility: ProfileVisibility,
+    tx?: Transaction,
+  ): Promise<ProfileRow | null> {
+    const [row] = await (tx ?? db)
+      .update(profilesTable)
+      .set({ visibility })
+      .where(eq(profilesTable.userId, userId))
+      .returning();
     return row ?? null;
   }
 

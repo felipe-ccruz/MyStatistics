@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
+import { ProfileItemRepository } from "@/profile/infra/profile-item.repository";
 import { db } from "@/shared/infra/databases/postgres";
 import { IntegrationTestHelper, type TestUser } from "@/shared/utils/test-helpers/integration-test-helper";
 import { entriesTable } from "../domain/metric.schema";
@@ -27,6 +28,19 @@ describe("deleteMetricUseCase - Integration", () => {
 
       expect(await MetricRepository.findById(user.id, metric.id)).toBeNull();
       expect(await db.select().from(entriesTable).where(eq(entriesTable.metricId, metric.id))).toHaveLength(0);
+    });
+
+    it("remove a escolha de visibilidade da métrica no portfólio e mantém as outras", async () => {
+      const metric = await MetricRepository.create({ userId: user.id, name: "Weight", unit: "kg" });
+      const kept = await MetricRepository.create({ userId: user.id, name: "Mood", unit: "" });
+      await ProfileItemRepository.upsert({ userId: user.id, kind: "metric", ref: String(metric.id), visible: true });
+      await ProfileItemRepository.upsert({ userId: user.id, kind: "metric", ref: String(kept.id), visible: true });
+      await ProfileItemRepository.upsert({ userId: user.id, kind: "progress", ref: "", visible: true });
+
+      await deleteMetricUseCase({ userId: user.id, id: metric.id });
+
+      const refs = (await ProfileItemRepository.findAll(user.id)).map((row) => `${row.kind}:${row.ref}`).sort();
+      expect(refs).toEqual([`metric:${kept.id}`, "progress:"]);
     });
   });
 
