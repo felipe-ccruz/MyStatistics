@@ -36,4 +36,25 @@ describe("ActivityController - Integration", () => {
       expect((await get("/summary?period=7d")).status).toBe(401);
     });
   });
+
+  describe("/:id fora dos inteiros aceitos", () => {
+    it("responde 422 VALIDATION (não 500) para fração, zero, negativo e fora do integer", async () => {
+      const user = await IntegrationTestHelper.createTestUser();
+
+      for (const id of ["1.5", "0", "-1", "2147483648", "99999999999"]) {
+        for (const method of ["GET", "PATCH", "DELETE"]) {
+          const response = await ActivityController.handle(
+            new Request(`http://localhost/activities/${id}`, {
+              method,
+              headers: { cookie: user.cookie, "content-type": "application/json" },
+              body: method === "PATCH" ? JSON.stringify({ category: "study" }) : undefined,
+            }),
+          );
+
+          expect({ id, method, status: response.status }).toEqual({ id, method, status: 422 });
+          expect(await response.json()).toMatchObject({ error: { code: "VALIDATION" } });
+        }
+      }
+    });
+  });
 });
