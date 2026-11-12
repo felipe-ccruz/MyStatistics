@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { isActivityCategory, isVisible, metricIdOf, metricRefOf, profileItemsOf } from "./profile-item-logic";
+import { isActivityCategory, isSlug, isVisible, metricIdOf, metricRefOf, profileItemsOf } from "./profile-item-logic";
 
 describe("profileItemsOf", () => {
   it("sem escolha gravada, tudo oculto: progress, as categorias e as métricas, nesta ordem", () => {
@@ -62,6 +62,15 @@ describe("metricIdOf / metricRefOf", () => {
   it("recusa o que não é um id de métrica", () => {
     for (const ref of ["", "0", "012", "-1", "1.5", " 1", "1e3", "abc", "2147483648", "99999999999"]) {
       expect(metricIdOf(ref)).toBeNull();
+    }
+  });
+});
+
+describe("isSlug", () => {
+  it("aceita só o formato do contrato", () => {
+    for (const slug of ["dev", "user-1", "a".repeat(30)]) expect(isSlug(slug)).toBe(true);
+    for (const slug of ["", "ab", "Dev", "user\u0000x", "-dev", "dev-", "a".repeat(31), "a b"]) {
+      expect(isSlug(slug)).toBe(false);
     }
   });
 });

@@ -3,6 +3,7 @@ import {
   type ActivityCategory,
   type ProfileItem,
   type ProfileItemKind,
+  SLUG_PATTERN,
 } from "@mystatistics/shared";
 import { MAX_INTEGER_ID } from "@/shared/infra/id-param";
 
@@ -69,6 +70,13 @@ export function metricIdOf(ref: string): number | null {
   if (!/^[1-9]\d{0,9}$/.test(ref)) return null;
   const id = Number(ref);
   return id <= MAX_INTEGER_ID ? id : null;
+}
+
+const SLUG = new RegExp(SLUG_PATTERN);
+
+/** `true` se o texto tem o formato de slug do contrato (`SLUG_PATTERN`). */
+export function isSlug(text: string): boolean {
+  return SLUG.test(text);
 }
 
 /** `true` se o texto é uma categoria de atividade. */

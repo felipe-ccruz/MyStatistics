@@ -54,6 +54,49 @@ describe("PublicProfileController - Integration", () => {
     expect(JSON.parse(anonymousBody)).not.toHaveProperty("progress");
   });
 
+  // Slug fora do formato que chega ao banco: o Postgres recusa texto com byte nulo
+  // (22021) e, sem checar o formato antes da query, a resposta vira 500 em vez do 404.
+  it("slug com byte nulo ou gigante responde o mesmo 404 PROFILE_NOT_FOUND (não 500)", async () => {
+    for (const slug of ["user\u0000x", "\u0000", "a".repeat(5000)]) {
+      const response = await get(slug);
+
+      expect({ slug: slug.slice(0, 10), status: response.status }).toEqual({ slug: slug.slice(0, 10), status: 404 });
+      expect(await response.json()).toEqual({ error: { message: "Profile not found.", code: "PROFILE_NOT_FOUND" } });
+    }
+  });
+
+  // Montado junto com os outros controllers (o ProfileController, com authGuard, vem
+  // antes no app.routes): o guard "scoped" não pode vazar para a rota pública.
+  it("dentro do appRoutes, abre sem sessão", async () => {
+    const { appRoutes } = await import("@/app.routes");
+    const owner = await IntegrationTestHelper.createTestUser();
+    await updateProfileUseCase({ userId: owner.id, visibility: "public" });
+
+    const response = await appRoutes.handle(new Request(`http://localhost/public/profiles/${owner.slug}`));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ slug: owner.slug });
+  });
+
+  // O JSON público não pode carregar id nem e-mail do dono.
+  it("o portfólio público não expõe id nem e-mail do dono", async () => {
+    const owner = await IntegrationTestHelper.createTestUser();
+    await updateProfileUseCase({ userId: owner.id, visibility: "public" });
+    for (const [kind, ref] of [
+      ["progress", ""],
+      ["activity_category", "study"],
+      ["activity_category", "exercise"],
+    ] as const) {
+      await updateProfileItemUseCase({ userId: owner.id, kind, ref, visible: true });
+    }
+
+    const body = await (await get(owner.slug)).text();
+
+    expect(body).not.toContain(owner.id);
+    expect(body).not.toContain(owner.email);
+    expect(body).not.toContain("userId");
+  });
+
   it("não aceita escrita", async () => {
     const owner = await IntegrationTestHelper.createTestUser();
 

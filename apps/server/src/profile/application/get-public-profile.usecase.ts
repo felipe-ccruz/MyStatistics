@@ -6,7 +6,7 @@ import { MetricRepository } from "@/metrics/infra/metric.repository";
 import { getProgressUseCase } from "@/progress/application/get-progress.usecase";
 import { NotFoundError } from "@/shared/infra/errors/not-found-error";
 import { todayISO } from "@/shared/utils/calendar-day";
-import { isVisible, metricRefOf, PROFILE_NOT_FOUND_MESSAGE } from "../domain/profile-item-logic";
+import { isSlug, isVisible, metricRefOf, PROFILE_NOT_FOUND_MESSAGE } from "../domain/profile-item-logic";
 import { ProfileItemRepository } from "../infra/profile-item.repository";
 
 type GetPublicProfileInput = {
@@ -30,7 +30,9 @@ export async function getPublicProfileUseCase({
   slug,
   today = todayISO(),
 }: GetPublicProfileInput): Promise<PublicProfile> {
-  const profile = await ProfileRepository.findBySlug(slug);
+  // Fora do formato nem chega ao banco (byte nulo faria o Postgres recusar a query com 500):
+  // é só um slug que não existe.
+  const profile = isSlug(slug) ? await ProfileRepository.findBySlug(slug) : null;
   // Inexistente (`null`) ou privado: a mesma resposta.
   if (profile?.visibility !== "public") {
     throw new NotFoundError(PROFILE_NOT_FOUND_MESSAGE, "PROFILE_NOT_FOUND");
