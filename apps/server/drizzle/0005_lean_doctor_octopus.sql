@@ -1,0 +1,1 @@
+ALTER TABLE "activities" ADD COLUMN "subject" varchar(60);

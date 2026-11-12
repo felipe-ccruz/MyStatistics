@@ -61,6 +61,39 @@ describe("getActivitySummaryUseCase - Integration", () => {
       expect(summary.trend).toEqual({ previousTotalMinutes: 60, changePercent: -50 });
     });
 
+    it("divide o study do período por matéria, sem matéria em Other", async () => {
+      await ActivityRepository.create({
+        userId: user.id,
+        category: "study",
+        durationMinutes: 30,
+        date: TODAY,
+        subject: "Calculus",
+      });
+      await ActivityRepository.create({
+        userId: user.id,
+        category: "study",
+        durationMinutes: 45,
+        date: "2026-11-10",
+        subject: "Calculus",
+      });
+      await log(user.id, "study", 20, "2026-11-09");
+      await log(user.id, "exercise", 90, TODAY);
+      await ActivityRepository.create({
+        userId: user.id,
+        category: "study",
+        durationMinutes: 300,
+        date: "2026-11-01", // período anterior: não conta
+        subject: "Physics",
+      });
+
+      const summary = await getActivitySummaryUseCase({ userId: user.id, period: "7d", today: TODAY });
+
+      expect(summary.studyBySubject).toEqual([
+        { subject: "Calculus", minutes: 75 },
+        { subject: "Other", minutes: 20 },
+      ]);
+    });
+
     it("usa o dia de calendário do server quando today não vem", async () => {
       const summary = await getActivitySummaryUseCase({ userId: user.id, period: "7d" });
 

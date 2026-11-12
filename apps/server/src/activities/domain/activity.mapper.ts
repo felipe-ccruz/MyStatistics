@@ -8,5 +8,6 @@ export function toActivity(row: ActivityRow): Activity {
     category: row.category,
     durationMinutes: row.durationMinutes,
     date: row.date,
+    subject: row.subject,
   };
 }

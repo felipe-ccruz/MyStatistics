@@ -5,7 +5,7 @@ import { NotFoundError } from "@/shared/infra/errors/not-found-error";
 import { UnprocessableEntityError } from "@/shared/infra/errors/unprocessable-entity-error";
 import { toActivity } from "../domain/activity.mapper";
 import type { ActivityIdParams } from "../domain/activity.types";
-import { toDurationMinutes } from "../domain/activity-logic";
+import { toDurationMinutes, updatedSubjectOf } from "../domain/activity-logic";
 import { type ActivityChanges, ActivityRepository } from "../infra/activity.repository";
 
 type UpdateActivityInput = SessionUser & ActivityIdParams & UpdateActivity;
@@ -14,6 +14,8 @@ type UpdateActivityInput = SessionUser & ActivityIdParams & UpdateActivity;
  * Atualização parcial da atividade do usuário: só muda o que veio no body. `hours` e `minutes`
  * vêm juntos (ou nenhum), porque a duração é recalculada a partir dos dois; body sem nada a mudar
  * responde 422. Atividade inexistente ou de outro usuário responde 404 `NOT_FOUND`.
+ * `subject: null` remove a matéria; matéria final fora de `study` → 422 `SUBJECT_NOT_ALLOWED`
+ * (ex.: mudar para `exercise` uma atividade com matéria sem mandar `subject: null` junto).
  * Lê e escreve na mesma transação, para não atualizar uma linha apagada no meio do caminho.
  */
 export async function updateActivityUseCase({ userId, id, ...input }: UpdateActivityInput): Promise<Activity> {
@@ -30,6 +32,9 @@ export async function updateActivityUseCase({ userId, id, ...input }: UpdateActi
     } else if (input.hours !== undefined || input.minutes !== undefined) {
       throw new UnprocessableEntityError("Send hours and minutes together to change the duration.", "INVALID_DURATION");
     }
+
+    const subject = updatedSubjectOf(current, input);
+    if (input.subject !== undefined) changes.subject = subject;
 
     if (Object.keys(changes).length === 0) {
       throw new UnprocessableEntityError("Nothing to update.", "EMPTY_UPDATE");

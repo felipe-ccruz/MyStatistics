@@ -20,6 +20,7 @@ describe("getActivityUseCase - Integration", () => {
         category: "study",
         durationMinutes: 75,
         date: "2026-10-21",
+        subject: "Calculus",
       });
 
       expect(await getActivityUseCase({ userId: user.id, id: row.id })).toEqual({
@@ -27,6 +28,7 @@ describe("getActivityUseCase - Integration", () => {
         category: "study",
         durationMinutes: 75,
         date: "2026-10-21",
+        subject: "Calculus",
       });
     });
   });

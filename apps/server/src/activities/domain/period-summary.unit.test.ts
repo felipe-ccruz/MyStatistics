@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { toDayMinutes } from "./day-minutes";
-import { periodSummaryOf, summaryRangeOf } from "./period-summary";
+import { periodSummaryOf, studyBySubjectOf, summaryRangeOf } from "./period-summary";
 
 const TODAY = "2026-11-11";
 
@@ -108,5 +108,54 @@ describe("periodSummaryOf", () => {
     const byDay = toDayMinutes([{ date: "2026-11-12", category: "study", minutes: 30 }]);
 
     expect(periodSummaryOf("7d", byDay, TODAY).totalMinutes).toBe(0);
+  });
+
+  it("studyBySubject vem vazio sem study no período", () => {
+    expect(periodSummaryOf("7d", toDayMinutes([]), TODAY).studyBySubject).toEqual([]);
+  });
+
+  it("studyBySubject soma por matéria só dentro do período, sem matéria em Other", () => {
+    const studyRows = [
+      { date: "2026-11-05", subject: "Calculus", minutes: 30 },
+      { date: TODAY, subject: "Calculus", minutes: 20 },
+      { date: "2026-11-08", subject: null, minutes: 40 },
+      { date: "2026-11-04", subject: "Physics", minutes: 500 }, // período anterior: não conta
+    ];
+
+    expect(periodSummaryOf("7d", toDayMinutes([]), TODAY, studyRows).studyBySubject).toEqual([
+      { subject: "Calculus", minutes: 50 },
+      { subject: "Other", minutes: 40 },
+    ]);
+  });
+});
+
+describe("studyBySubjectOf", () => {
+  const days = new Set(["2026-11-10", TODAY]);
+
+  it("ordena por minutos desc e, no empate, por nome", () => {
+    const rows = [
+      { date: TODAY, subject: "Physics", minutes: 30 },
+      { date: TODAY, subject: "Biology", minutes: 30 },
+      { date: "2026-11-10", subject: "Algebra", minutes: 60 },
+    ];
+
+    expect(studyBySubjectOf(rows, days)).toEqual([
+      { subject: "Algebra", minutes: 60 },
+      { subject: "Biology", minutes: 30 },
+      { subject: "Physics", minutes: 30 },
+    ]);
+  });
+
+  it("junta as atividades sem matéria em Other", () => {
+    const rows = [
+      { date: TODAY, subject: null, minutes: 10 },
+      { date: "2026-11-10", subject: null, minutes: 15 },
+    ];
+
+    expect(studyBySubjectOf(rows, days)).toEqual([{ subject: "Other", minutes: 25 }]);
+  });
+
+  it("lista vazia vira lista vazia", () => {
+    expect(studyBySubjectOf([], days)).toEqual([]);
   });
 });

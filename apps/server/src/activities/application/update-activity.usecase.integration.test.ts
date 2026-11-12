@@ -25,13 +25,90 @@ describe("updateActivityUseCase - Integration", () => {
     it("muda só os campos enviados", async () => {
       const updated = await updateActivityUseCase({ userId: user.id, id: existing.id, category: "exercise" });
 
-      expect(updated).toEqual({ id: existing.id, category: "exercise", durationMinutes: 90, date: "2026-10-20" });
+      expect(updated).toEqual({
+        id: existing.id,
+        category: "exercise",
+        durationMinutes: 90,
+        date: "2026-10-20",
+        subject: null,
+      });
     });
 
     it("recalcula a duração quando hours e minutes vêm juntos", async () => {
       const updated = await updateActivityUseCase({ userId: user.id, id: existing.id, hours: 2, minutes: 15 });
 
       expect(updated.durationMinutes).toBe(135);
+    });
+  });
+
+  describe("Matéria", () => {
+    let withSubject: ActivityRow;
+
+    beforeEach(async () => {
+      withSubject = await ActivityRepository.create({
+        userId: user.id,
+        category: "study",
+        durationMinutes: 60,
+        date: "2026-10-21",
+        subject: "Calculus",
+      });
+    });
+
+    it("troca a matéria, sem espaços nas pontas", async () => {
+      const updated = await updateActivityUseCase({ userId: user.id, id: withSubject.id, subject: " Physics " });
+
+      expect(updated.subject).toBe("Physics");
+    });
+
+    it("mantém a matéria quando subject não vem", async () => {
+      const updated = await updateActivityUseCase({ userId: user.id, id: withSubject.id, hours: 1, minutes: 30 });
+
+      expect(updated.subject).toBe("Calculus");
+    });
+
+    it("subject: null remove a matéria", async () => {
+      const updated = await updateActivityUseCase({ userId: user.id, id: withSubject.id, subject: null });
+
+      expect(updated.subject).toBeNull();
+    });
+
+    it("muda para exercise mandando subject: null junto", async () => {
+      const updated = await updateActivityUseCase({
+        userId: user.id,
+        id: withSubject.id,
+        category: "exercise",
+        subject: null,
+      });
+
+      expect(updated).toMatchObject({ category: "exercise", subject: null });
+    });
+
+    it("recusa mudar para exercise sem remover a matéria, com SUBJECT_NOT_ALLOWED, e não altera nada", async () => {
+      const error = await IntegrationTestHelper.rejectionOf(
+        updateActivityUseCase({ userId: user.id, id: withSubject.id, category: "exercise" }),
+      );
+
+      expect(error).toMatchObject({ status: 422, apiCode: "SUBJECT_NOT_ALLOWED" });
+      expect(await ActivityRepository.findById(user.id, withSubject.id)).toEqual(withSubject);
+    });
+
+    it("recusa matéria numa atividade exercise com SUBJECT_NOT_ALLOWED", async () => {
+      await updateActivityUseCase({ userId: user.id, id: existing.id, category: "exercise" });
+
+      const error = await IntegrationTestHelper.rejectionOf(
+        updateActivityUseCase({ userId: user.id, id: existing.id, subject: "Running" }),
+      );
+
+      expect(error).toMatchObject({ status: 422, apiCode: "SUBJECT_NOT_ALLOWED" });
+    });
+
+    it("recusa matéria só de espaços com VALIDATION", async () => {
+      const error = await IntegrationTestHelper.rejectionOf(
+        updateActivityUseCase({ userId: user.id, id: withSubject.id, subject: "  " }),
+      );
+
+      expect(error).toMatchObject({ status: 422, apiCode: "VALIDATION" });
+      expect((await ActivityRepository.findById(user.id, withSubject.id))?.subject).toBe("Calculus");
     });
   });
 

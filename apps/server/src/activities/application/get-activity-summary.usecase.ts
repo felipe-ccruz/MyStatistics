@@ -21,6 +21,9 @@ export async function getActivitySummaryUseCase({
   today = todayISO(),
 }: GetActivitySummaryInput): Promise<ActivitySummary> {
   const range = summaryRangeOf(period, today);
-  const rows = await ActivityRepository.minutesPerDayAndCategoryBetween(userId, range.from, range.to);
-  return periodSummaryOf(period, toDayMinutes(rows), today);
+  const [rows, studyRows] = await Promise.all([
+    ActivityRepository.minutesPerDayAndCategoryBetween(userId, range.from, range.to),
+    ActivityRepository.studyMinutesPerDayAndSubjectBetween(userId, range.from, range.to),
+  ]);
+  return periodSummaryOf(period, toDayMinutes(rows), today, studyRows);
 }

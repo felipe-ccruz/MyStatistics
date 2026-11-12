@@ -6,7 +6,7 @@
  */
 
 import { ACTIVITY_CATEGORIES } from "@mystatistics/shared/activity";
-import { date, index, integer, pgEnum, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { date, index, integer, pgEnum, pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
 // Import relativo: o drizzle-kit lê os *.schema.ts sem o alias `@/` do tsconfig.
 import { usersTable } from "../../auth/domain/auth.schema";
 
@@ -25,6 +25,8 @@ export const activitiesTable = pgTable(
     category: activityCategory("category").notNull(),
     durationMinutes: integer("duration_minutes").notNull(),
     date: date("date").notNull(),
+    /** Matéria de uma atividade `study` (sem espaços nas pontas); `null` sem matéria e sempre em `exercise`. */
+    subject: varchar("subject", { length: 60 }),
   },
   // Toda leitura é "as atividades do usuário, por data".
   (table) => [index("activities_user_id_date_idx").on(table.userId, table.date)],

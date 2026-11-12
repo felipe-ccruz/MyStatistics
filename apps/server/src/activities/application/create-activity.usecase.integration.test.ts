@@ -23,8 +23,27 @@ describe("createActivityUseCase - Integration", () => {
         date: "2026-10-20",
       });
 
-      expect(activity).toEqual({ id: expect.any(Number), category: "study", durationMinutes: 90, date: "2026-10-20" });
+      expect(activity).toEqual({
+        id: expect.any(Number),
+        category: "study",
+        durationMinutes: 90,
+        date: "2026-10-20",
+        subject: null,
+      });
       expect(await ActivityRepository.findById(user.id, activity.id)).toMatchObject({ userId: user.id });
+    });
+
+    it("grava a matéria de uma atividade study sem espaços nas pontas", async () => {
+      const activity = await createActivityUseCase({
+        userId: user.id,
+        category: "study",
+        hours: 0,
+        minutes: 50,
+        subject: "  Calculus ",
+      });
+
+      expect(activity.subject).toBe("Calculus");
+      expect(await ActivityRepository.findById(user.id, activity.id)).toMatchObject({ subject: "Calculus" });
     });
 
     it("usa o dia de hoje quando date não vem", async () => {
@@ -41,6 +60,24 @@ describe("createActivityUseCase - Integration", () => {
       );
 
       expect(error).toMatchObject({ status: 422, apiCode: "INVALID_DURATION" });
+      expect(await ActivityRepository.findAll(user.id)).toHaveLength(0);
+    });
+
+    it("rejeita matéria em exercise com SUBJECT_NOT_ALLOWED e não grava nada", async () => {
+      const error = await IntegrationTestHelper.rejectionOf(
+        createActivityUseCase({ userId: user.id, category: "exercise", hours: 1, minutes: 0, subject: "Running" }),
+      );
+
+      expect(error).toMatchObject({ status: 422, apiCode: "SUBJECT_NOT_ALLOWED" });
+      expect(await ActivityRepository.findAll(user.id)).toHaveLength(0);
+    });
+
+    it("rejeita matéria só de espaços com VALIDATION e não grava nada", async () => {
+      const error = await IntegrationTestHelper.rejectionOf(
+        createActivityUseCase({ userId: user.id, category: "study", hours: 1, minutes: 0, subject: "   " }),
+      );
+
+      expect(error).toMatchObject({ status: 422, apiCode: "VALIDATION" });
       expect(await ActivityRepository.findAll(user.id)).toHaveLength(0);
     });
   });
